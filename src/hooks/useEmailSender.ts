@@ -21,6 +21,7 @@ export function useEmailSender() {
       // Get auth token for support requests
       let headers: Record<string, string> = {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
       };
 
       if (emailData.type === 'support') {
@@ -34,14 +35,29 @@ export function useEmailSender() {
         method: 'POST',
         headers,
         body: JSON.stringify(emailData),
+        mode: 'cors',
       });
 
+      // Check if response is ok first
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to send email');
+        let errorMessage = 'Failed to send email';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (parseError) {
+          // If we can't parse the error response, use the status text
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
 
-      const result = await response.json();
+      let result;
+      try {
+        result = await response.json();
+      } catch (parseError) {
+        // If response is ok but not JSON, treat as success
+        result = { success: true };
+      }
       
       if (emailData.type === 'support') {
         toast.success('Support request sent successfully! We\'ll get back to you within 24 hours.');
@@ -52,7 +68,20 @@ export function useEmailSender() {
       return { success: true, data: result };
     } catch (error: any) {
       console.error('Error sending email:', error);
-      toast.error(error.message || 'Failed to send email. Please try again.');
+      
+      // Provide more specific error messages
+      let errorMessage = 'Failed to send email. Please try again.';
+      if (error.message) {
+        if (error.message.includes('NetworkError') || error.message.includes('fetch')) {
+          errorMessage = 'Network error. Please check your connection and try again.';
+        } else if (error.message.includes('CORS')) {
+          errorMessage = 'Configuration error. Please contact support.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      toast.error(errorMessage);
       return { success: false, error: error.message };
     } finally {
       setLoading(false);
