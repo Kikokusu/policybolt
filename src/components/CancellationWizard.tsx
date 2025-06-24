@@ -138,7 +138,7 @@ export function CancellationWizard({ open, onOpenChange, onSuccess }: Cancellati
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center space-y-4">
-            <div className="bg-gray/600 rounded-lg p-4">
+            <div className="bg-gray/200 rounded-lg p-4">
               <div className="text-3xl font-bold text-primary mb-2">
                 <span className="text-red-500">50% OFF</span>
               </div>
