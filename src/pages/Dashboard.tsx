@@ -72,13 +72,14 @@ export function DashboardPage() {
 
   const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
   const activeProjects = projects.filter(p => p.status === 'active').length;
+  const totalProjects = projects.length;
   const syncedProjects = projects.filter(p => p.github_synced).length;
 
   const stats = [
     {
       title: 'Active Projects',
       value: activeProjects.toString(),
-      change: 'Unlimited',
+      change: `${totalProjects} total`,
       icon: Code,
       trend: 'neutral',
     },

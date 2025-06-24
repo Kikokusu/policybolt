@@ -251,15 +251,26 @@ export function ProjectsPage() {
               <FileText className="w-16 h-16 text-muted-foreground mb-6" />
               <h3 className="text-xl font-semibold mb-2">No projects yet</h3>
               <p className="text-muted-foreground text-center mb-6 max-w-md">
-                Create your first project to start generating privacy policies automatically. 
-                Connect your GitHub repository for real-time monitoring.
+                {hasActiveSubscription 
+                  ? "Create your first project to start generating privacy policies automatically. Connect your GitHub repository for real-time monitoring."
+                  : "You need an active subscription to create and manage projects. Please upgrade your plan to continue."
+                }
               </p>
-              <Button asChild>
-                <RouterLink to="/dashboard/projects/new">
-                  <Plus className="mr-2 w-4 h-4" />
-                  Create Your First Project
-                </RouterLink>
-              </Button>
+              {hasActiveSubscription ? (
+                <Button asChild>
+                  <RouterLink to="/dashboard/projects/new">
+                    <Plus className="mr-2 w-4 h-4" />
+                    Create Your First Project
+                  </RouterLink>
+                </Button>
+              ) : (
+                <Button asChild>
+                  <RouterLink to="/select-plan">
+                    <Plus className="mr-2 w-4 h-4" />
+                    Upgrade Plan
+                  </RouterLink>
+                </Button>
+              )}
             </CardContent>
           </Card>
         ) : (
