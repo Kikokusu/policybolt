@@ -41,8 +41,8 @@ const planFeatures = {
 };
 
 const planPrices = {
-  'Solo Developer Plan': '£0.29',
-  'Growing Startup': '£0.79',
+  'Solo Developer Plan': '£29.00',
+  'Growing Startup': '£79.00',
 };
 
 export function PlanSelectionPage() {
