@@ -29,9 +29,13 @@ import {
   Loader2,
   Eye,
   EyeOff,
+  LifeBuoy,
 } from 'lucide-react';
+import { Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
+import { SupportRequestForm } from '@/components/SupportRequestForm';
+import { stripeProducts } from '@/stripe-config';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -513,7 +517,9 @@ export function ProfilePage() {
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Current Plan</label>
                   <div className="flex items-center space-x-2 mt-1">
-                    <Badge variant="secondary">{subscription?.plan?.name || 'Unknown'}</Badge>
+                    <Badge variant="secondary">
+                      {subscription?.plan?.name || 'Unknown'}
+                    </Badge>
                     <Badge 
                       variant="secondary" 
                       className={subscription?.status === 'trial' ? 'bg-yellow-500 text-white' : 'bg-success text-white'}
@@ -562,15 +568,21 @@ export function ProfilePage() {
             <Card className="shadow-lg border-0 bg-muted/30">
               <CardContent className="p-6">
                 <div className="text-center">
-                  <Mail className="w-12 h-12 text-primary mx-auto mb-4" />
+                  <LifeBuoy className="w-12 h-12 text-primary mx-auto mb-4" />
                   <h3 className="font-semibold mb-2">Need Help?</h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Contact our support team if you need assistance with your account.
+                    Get help from our support team or contact us directly.
                   </p>
-                  <Button variant="outline" size="sm">
-                    <Mail className="w-4 h-4 mr-2" />
-                    Contact Support
-                  </Button>
+                  <div className="space-y-2">
+                    <SupportRequestForm 
+                      trigger={
+                        <Button variant="outline" size="sm" className="w-full">
+                          <LifeBuoy className="w-4 h-4 mr-2" />
+                          Request Support
+                        </Button>
+                      }
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>

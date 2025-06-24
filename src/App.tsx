@@ -9,6 +9,7 @@ import { PrivacyPage } from '@/pages/Privacy';
 import { LoginPage } from '@/pages/Login';
 import { SignupPage } from '@/pages/Signup';
 import { PlanSelectionPage } from '@/pages/PlanSelection';
+import { SuccessPage } from '@/pages/Success';
 import { DashboardPage } from '@/pages/Dashboard';
 import { AddProjectPage } from '@/pages/AddProject';
 import { ProjectsPage } from '@/pages/Projects';
@@ -35,6 +36,7 @@ function App() {
             <Route path="/auth/login" element={<LoginPage />} />
             <Route path="/auth/signup" element={<SignupPage />} />
             <Route path="/select-plan" element={<PlanSelectionPage />} />
+            <Route path="/success" element={<SuccessPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/dashboard/projects/new" element={<AddProjectPage />} />
             <Route path="/dashboard/projects" element={<ProjectsPage />} />

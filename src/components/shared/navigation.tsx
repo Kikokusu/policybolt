@@ -23,7 +23,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
+import { useStripeSubscription } from '@/hooks/useStripeSubscription';
 import { toast } from 'sonner';
 
 interface NavigationProps {
@@ -53,6 +55,7 @@ export function Navigation({ isAuthenticated: propIsAuthenticated, user: propUse
   const location = useLocation();
   const pathname = location.pathname;
   const { user: authUser, signOut } = useAuth();
+  const { subscription, hasActiveSubscription } = useStripeSubscription();
 
   // Use auth context if available, otherwise fall back to props
   const isAuthenticated = propIsAuthenticated ?? !!authUser;
@@ -163,6 +166,14 @@ export function Navigation({ isAuthenticated: propIsAuthenticated, user: propUse
                       <p className="text-xs leading-none text-muted-foreground">
                         {user.email}
                       </p>
+                      {hasActiveSubscription && subscription && (
+                        <Badge 
+                          variant="secondary" 
+                          className={subscription.subscription_status === 'active' ? 'bg-success text-white' : 'bg-yellow-500 text-white'}
+                        >
+                          {subscription.subscription_status === 'trialing' ? 'Free Trial' : 'Pro'}
+                        </Badge>
+                      )}
                     </div>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>

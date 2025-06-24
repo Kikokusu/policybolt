@@ -19,6 +19,7 @@ import {
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useEmailSender } from '@/hooks/useEmailSender';
 
 const contactSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -49,8 +50,8 @@ const contactMethods = [
 
 export function ContactPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { sendEmail, loading: emailLoading } = useEmailSender();
 
   const {
     register,
@@ -62,21 +63,29 @@ export function ContactPage() {
   });
 
   const onSubmit = async (data: ContactFormData) => {
-    setIsLoading(true);
     setError(null);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log('Contact form data:', data);
-      setIsSubmitted(true);
-      reset();
-    } catch (err) {
-      setError('Failed to send message. Please try again.');
-    } finally {
-      setIsLoading(false);
+      const result = await sendEmail({
+        type: 'contact',
+        name: data.name,
+        email: data.email,
+        subject: data.subject,
+        message: data.message,
+        company: data.company,
+      });
+
+      if (result.success) {
+        reset();
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to send message. Please try again.');
     }
   };
+
+  // Show loading state
+  const isSubmitting = emailLoading;
+
 
   return (
     <div className="min-h-screen">
@@ -143,15 +152,6 @@ export function ContactPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {isSubmitted && (
-                  <Alert className="mb-6 border-success bg-success/10">
-                    <CheckCircle className="h-4 w-4 text-success" />
-                    <AlertDescription className="text-success">
-                      Thank you for your message! We'll get back to you within 24 hours.
-                    </AlertDescription>
-                  </Alert>
-                )}
-
                 {error && (
                   <Alert variant="destructive" className="mb-6">
                     <AlertCircle className="h-4 w-4" />
@@ -230,8 +230,8 @@ export function ContactPage() {
                     )}
                   </div>
 
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? (
+                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                    {isSubmitting ? (
                       'Sending...'
                     ) : (
                       <>

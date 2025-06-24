@@ -144,15 +144,15 @@ Tracks policy update frequency per project.
 ### **Policy Distribution**
 1. User can download active policies as Markdown
 2. User can get embed code for website integration
-3. Embed widget automatically shows latest active policy
+3. Embed widget automatically shows latest active 
 
-## 🚧 Pending Work
-
-### **🔴 High Priority - Payment Integration**
+### ** Payment Integration**
 - **Stripe Integration**: Complete payment processing for plan subscriptions
 - **Subscription Management**: Allow users to upgrade/downgrade plans
 - **Cancellation Flow**: Implement cancellation with retention offers (50% discount for 3 months)
 - **Billing Dashboard**: Invoice history, payment methods, billing cycles
+
+## 🚧 Pending Work
 
 ### **🔴 High Priority - GitHub Integration**
 - **GitHub OAuth/App**: Authenticate and connect repositories
@@ -165,19 +165,11 @@ Tracks policy update frequency per project.
 - **Email Notifications**: Notify users of policy updates and approvals
 - **Team Collaboration**: Multi-user access for Growing Startup+ plans
 - **Custom Templates**: Allow users to customize policy templates
-- **API Access**: REST API for programmatic policy management
 
-### **🟡 Medium Priority - User Experience**
-- **Onboarding Tour**: Guided tour for new users
-- **Policy Preview**: Live preview during project setup
-- **Bulk Operations**: Manage multiple projects/policies at once
-- **Advanced Analytics**: Policy update trends, compliance tracking
+### **🟢 Low Priority - ChatBot**
+- **Chatbot Agent Landing Page**: Chat live for instant answers about PolicyBolt.
+- **Chatbot Agent Subscriber**: Instant answers to compliance and privacy policy questions.
 
-### **🟢 Low Priority - Advanced Features**
-- **White-label Solutions**: Custom branding for Enterprise plans
-- **Legal Review Service**: Professional legal review option
-- **Compliance Monitoring**: Automated compliance checking
-- **Integration Marketplace**: Connect with other legal/compliance tools
 
 ## 🛠️ Technical Stack
 
@@ -200,9 +192,30 @@ Tracks policy update frequency per project.
 ## 📝 Environment Variables Required
 
 ```env
+# Supabase Configuration
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# Email Service (Resend API)
+RESEND_API_KEY=your_resend_api_key
+
+# Stripe Configuration (for payment processing)
+STRIPE_SECRET_KEY=your_stripe_secret_key
+STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
+
+# Application Configuration
+VITE_APP_URL=http://localhost:5173
+
+# Email Configuration (for Supabase Edge Functions)
+FROM_EMAIL=noreply@yourdomain.com
+TO_EMAILS=support@yourdomain.com,admin@yourdomain.com
 ```
+
+**Important Notes:**
+- All environment variables must be configured in your deployment environment
+- For Supabase Edge Functions, configure `RESEND_API_KEY`, `FROM_EMAIL`, and `TO_EMAILS` in your Supabase project's Edge Functions environment variables
+- For Stripe integration, configure `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` in your Supabase project's Edge Functions environment variables
+- Copy `.env.example` to `.env` and fill in your actual values for local development
 
 ## 🚀 Deployment
 

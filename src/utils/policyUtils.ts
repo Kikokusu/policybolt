@@ -27,7 +27,7 @@ ${policy.content}
 };
 
 export const generateEmbedCode = (projectId: string, policyId?: string) => {
-  const baseUrl = window.location.origin;
+  const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
   const embedUrl = policyId 
     ? `${baseUrl}/embed/policy/${policyId}`
     : `${baseUrl}/embed/project/${projectId}/active-policy`;

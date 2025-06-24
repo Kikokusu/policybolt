@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Plan, UserSubscription } from '@/types/database';
 
 export function useSubscription() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [subscription, setSubscription] = useState<UserSubscription | null>(null);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,6 +56,12 @@ export function useSubscription() {
 
         setSubscription(data || null);
       } catch (err: any) {
+        // Handle JWT expired error by signing out the user
+        if (err.message?.includes('JWT expired') || err.code === 'PGRST301') {
+          await signOut();
+          return;
+        }
+        
         // Only log actual errors, not expected "no subscription" scenarios
         if (err.code !== 'PGRST116') {
           console.error('Error fetching subscription:', err);
