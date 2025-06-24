@@ -15,7 +15,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSubscription } from '@/hooks/useSubscription';
+import { useStripeSubscription } from '@/hooks/useStripeSubscription';
 import { useProjects } from '@/hooks/useProjects';
 import { toast } from 'sonner';
 
@@ -81,7 +81,7 @@ const steps = [
 
 export function AddProjectPage() {
   const { user, loading: authLoading } = useAuth();
-  const { subscription, loading: subscriptionLoading, hasSubscription } = useSubscription();
+  const { subscription, loading: subscriptionLoading, hasActiveSubscription } = useStripeSubscription();
   const { projects, createProject } = useProjects();
   const navigate = useNavigate();
 
@@ -98,48 +98,36 @@ export function AddProjectPage() {
     }
 
     if (!authLoading && !subscriptionLoading && user && !hasSubscription) {
+    if (!authLoading && !subscriptionLoading && user && !hasActiveSubscription) {
       navigate('/select-plan');
       return;
     }
-  }, [user, authLoading, subscriptionLoading, hasSubscription, navigate]);
+  }, [user, authLoading, subscriptionLoading, hasActiveSubscription, navigate]);
 
   // Check project limits
   const getMaxProjects = () => {
-    console.log('Full subscription data for project limits:', subscription);
-    console.log('Subscription status:', subscription?.subscription_status);
-    console.log('Price ID for limits:', subscription?.price_id);
-    
     if (!subscription || !subscription.price_id) {
-      console.log('No subscription or price_id found');
       return 0;
     }
 
     // Only allow project creation for active or trialing subscriptions
     if (!['active', 'trialing'].includes(subscription.subscription_status || '')) {
-      console.log('Subscription not active or trialing:', subscription.subscription_status);
       return 0;
     }
     
     // Map Stripe price IDs to project limits
     if (subscription.price_id === 'price_1RddANKSNriwT6N669BShQb0') {
-      console.log('Matched Solo Developer plan');
       return 1; // Solo Developer
     } else if (subscription.price_id === 'price_1RddB1KSNriwT6N6Ku1vE00V') {
-      console.log('Matched Growing Startup plan');
       return 5; // Growing Startup
     }
     
-    console.log('No plan matched, returning 0');
     return 0;
   };
   
   const maxProjects = getMaxProjects();
   const activeProjects = projects.filter(p => p.status === 'active').length;
   const canCreateProject = maxProjects > 0 && activeProjects < maxProjects;
-  
-  console.log('Max projects:', maxProjects);
-  console.log('Active projects:', activeProjects);
-  console.log('Can create project:', canCreateProject);
 
   if (authLoading || subscriptionLoading) {
     return (
@@ -152,7 +140,7 @@ export function AddProjectPage() {
     );
   }
 
-  if (!user || !hasSubscription) {
+  if (!user || !hasActiveSubscription) {
     return null;
   }
 

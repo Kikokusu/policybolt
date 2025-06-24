@@ -16,12 +16,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useStripeSubscription } from '@/hooks/useStripeSubscription';
 import { CancellationWizard } from '@/components/CancellationWizard';
 import { SupportRequestForm } from '@/components/SupportRequestForm';
-import { stripeProducts } from '@/stripe-config';
 import { toast } from 'sonner';
 
 export function SettingsPage() {
   const { user, loading: authLoading } = useAuth();
-  const { subscription, hasActiveSubscription, loading: subscriptionLoading } = useStripeSubscription();
+  const { subscription, hasActiveSubscription, loading: subscriptionLoading, getPlanName } = useStripeSubscription();
   const navigate = useNavigate();
   const [showCancellationWizard, setShowCancellationWizard] = useState(false);
 
@@ -54,19 +53,6 @@ export function SettingsPage() {
 
   const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
   const userEmail = user.email || '';
-
-  // Get plan name from Stripe subscription
-  const getPlanName = () => {
-    if (!subscription) return 'Unknown Plan';
-    
-    // Find the plan name from stripe config
-    const product = stripeProducts.find(p => p.priceId === subscription.price_id);
-    if (product) {
-      return product.name.replace(' Plan', ''); // Remove "Plan" suffix for cleaner display
-    }
-    
-    return 'Unknown Plan';
-  };
 
   const isTrialing = subscription?.subscription_status === 'trialing';
   const isActive = subscription?.subscription_status === 'active';

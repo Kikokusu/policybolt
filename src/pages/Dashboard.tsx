@@ -18,7 +18,6 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStripeSubscription } from '@/hooks/useStripeSubscription';
 import { useProjects } from '@/hooks/useProjects';
-import { stripeProducts } from '@/stripe-config';
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -39,7 +38,7 @@ const getStatusColor = (status: string) => {
 
 export function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
-  const { subscription, hasActiveSubscription, loading: subscriptionLoading } = useStripeSubscription();
+  const { subscription, hasActiveSubscription, loading: subscriptionLoading, getPlanName } = useStripeSubscription();
   const { projects, totalPolicyUpdates, loading: projectsLoading } = useProjects();
   const navigate = useNavigate();
 
@@ -74,19 +73,6 @@ export function DashboardPage() {
   const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
   const activeProjects = projects.filter(p => p.status === 'active').length;
   const syncedProjects = projects.filter(p => p.github_synced).length;
-
-  // Get plan name from Stripe subscription
-  const getPlanName = () => {
-    if (!subscription) return 'Unknown Plan';
-    
-    // Find the plan name from stripe config
-    const product = stripeProducts.find(p => p.priceId === subscription.price_id);
-    if (product) {
-      return product.name.replace(' Plan', ''); // Remove "Plan" suffix for cleaner display
-    }
-    
-    return 'Pro Plan';
-  };
 
   const stats = [
     {
