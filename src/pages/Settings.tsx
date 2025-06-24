@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStripeSubscription } from '@/hooks/useStripeSubscription';
-import { useStripeBilling } from '@/hooks/useStripeBilling';
 import { CancellationWizard } from '@/components/CancellationWizard';
 import { stripeProducts } from '@/stripe-config';
 import { toast } from 'sonner';
@@ -22,7 +21,6 @@ import { toast } from 'sonner';
 export function SettingsPage() {
   const { user, loading: authLoading } = useAuth();
   const { subscription, hasActiveSubscription, loading: subscriptionLoading } = useStripeSubscription();
-  const { openBillingPortal, loading: billingLoading } = useStripeBilling();
   const navigate = useNavigate();
   const [showCancellationWizard, setShowCancellationWizard] = useState(false);
 
@@ -74,11 +72,8 @@ export function SettingsPage() {
   const canChangeplan = isActive; // Only allow plan changes for active subscriptions
 
   const handleManageBilling = async () => {
-    try {
-      await openBillingPortal();
-    } catch (error) {
-      // Error is already handled by the hook
-    }
+    // Open Stripe customer portal in a new tab
+    window.open('https://billing.stripe.com/p/login/9B6dRa0u5diKdi9gpL4wM00', '_blank');
   };
 
   return (
@@ -172,19 +167,9 @@ export function SettingsPage() {
                     variant="outline" 
                     className="w-full" 
                     onClick={handleManageBilling}
-                    disabled={billingLoading}
                   >
-                    {billingLoading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Opening...
-                      </>
-                    ) : (
-                      <>
                     <CreditCard className="w-4 h-4 mr-2" />
                         Manage Billing
-                      </>
-                    )}
                   </Button>
                   {canChangeplan ? (
                     <Button variant="outline" className="w-full">
