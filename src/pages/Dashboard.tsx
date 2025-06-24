@@ -18,6 +18,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStripeSubscription } from '@/hooks/useStripeSubscription';
 import { useProjects } from '@/hooks/useProjects';
+import { stripeProducts } from '@/stripe-config';
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -78,13 +79,13 @@ export function DashboardPage() {
   const getPlanName = () => {
     if (!subscription) return 'Unknown Plan';
     
-    // Map price IDs to plan names
-    const priceToName: { [key: string]: string } = {
-      'price_1RdSy5KSNriwT6N6QxdEu4Ct': 'Solo Developer',
-      'price_1RdSzKKSNriwT6N6Tlfyh1oV': 'Growing Startup',
-    };
+    // Find the plan name from stripe config
+    const product = stripeProducts.find(p => p.priceId === subscription.price_id);
+    if (product) {
+      return product.name.replace(' Plan', ''); // Remove "Plan" suffix for cleaner display
+    }
     
-    return priceToName[subscription.price_id || ''] || 'Pro Plan';
+    return 'Pro Plan';
   };
 
   const stats = [

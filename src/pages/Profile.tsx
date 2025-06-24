@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
+import { stripeProducts } from '@/stripe-config';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -513,7 +514,9 @@ export function ProfilePage() {
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Current Plan</label>
                   <div className="flex items-center space-x-2 mt-1">
-                    <Badge variant="secondary">{subscription?.plan?.name || 'Unknown'}</Badge>
+                    <Badge variant="secondary">
+                      {subscription?.plan?.name || 'Unknown'}
+                    </Badge>
                     <Badge 
                       variant="secondary" 
                       className={subscription?.status === 'trial' ? 'bg-yellow-500 text-white' : 'bg-success text-white'}

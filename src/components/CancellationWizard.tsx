@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { useStripeCancellation } from '@/hooks/useStripeCancellation';
 import { useStripeSubscription } from '@/hooks/useStripeSubscription';
+import { stripeProducts } from '@/stripe-config';
 
 interface CancellationWizardProps {
   open: boolean;
@@ -55,6 +56,21 @@ export function CancellationWizard({ open, onOpenChange, onSuccess }: Cancellati
 
   const isTrialing = subscription?.subscription_status === 'trialing';
   const isActive = subscription?.subscription_status === 'active';
+
+  const getOriginalPrice = () => {
+    const product = stripeProducts.find(p => p.priceId === subscription?.price_id);
+    return product?.name.includes('Solo') ? '£29' : '£79';
+  };
+
+  const getDiscountedPrice = () => {
+    const product = stripeProducts.find(p => p.priceId === subscription?.price_id);
+    return product?.name.includes('Solo') ? '£14.50' : '£39.50';
+  };
+
+  const getTotalSavings = () => {
+    const product = stripeProducts.find(p => p.priceId === subscription?.price_id);
+    return product?.name.includes('Solo') ? '£43.50' : '£118.50';
+  };
 
   const handleClose = () => {
     setStep('retention');
@@ -138,19 +154,19 @@ export function CancellationWizard({ open, onOpenChange, onSuccess }: Cancellati
               <div className="flex items-center justify-between">
                 <span>Original price:</span>
                 <span className="line-through text-muted-foreground">
-                  {subscription?.price_id === 'price_1RdSy5KSNriwT6N6QxdEu4Ct' ? '£29' : '£79'}/month
+                  {getOriginalPrice()}/month
                 </span>
               </div>
               <div className="flex items-center justify-between font-semibold">
                 <span>Your price for 3 months:</span>
                 <span className="text-primary">
-                  {subscription?.price_id === 'price_1RdSy5KSNriwT6N6QxdEu4Ct' ? '£14.50' : '£39.50'}/month
+                  {getDiscountedPrice()}/month
                 </span>
               </div>
             </div>
 
             <Badge variant="secondary" className="bg-success text-white">
-              Save {subscription?.price_id === 'price_1RdSy5KSNriwT6N6QxdEu4Ct' ? '£43.50' : '£118.50'} over 3 months
+              Save {getTotalSavings()} over 3 months
             </Badge>
           </CardContent>
         </Card>
