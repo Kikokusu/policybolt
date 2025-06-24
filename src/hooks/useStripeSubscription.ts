@@ -19,17 +19,57 @@ export function useStripeSubscription() {
       }
 
       try {
-        const { data, error } = await supabase
-          .from('stripe_user_subscriptions')
-          .select('*')
+        // First, let's check if we have a customer record
+        const { data: customerData, error: customerError } = await supabase
+          .from('stripe_customers')
+          .select('customer_id')
+          .eq('user_id', user.id)
+          .is('deleted_at', null)
           .maybeSingle();
 
-        if (error) {
-          throw error;
+        console.log('Customer data:', customerData);
+
+        if (customerError) {
+          console.error('Customer error:', customerError);
+          throw customerError;
         }
 
-        console.log('Stripe subscription data:', data);
-        setSubscription(data);
+        if (!customerData) {
+          console.log('No customer found for user');
+          setSubscription(null);
+          return;
+        }
+
+        // Now get the subscription data
+        const { data: subscriptionData, error: subscriptionError } = await supabase
+          .from('stripe_subscriptions')
+          .select('*')
+          .eq('customer_id', customerData.customer_id)
+          .is('deleted_at', null)
+          .maybeSingle();
+
+        console.log('Raw subscription data:', subscriptionData);
+
+        if (subscriptionError) {
+          console.error('Subscription error:', subscriptionError);
+          throw subscriptionError;
+        }
+
+        // Transform the data to match our interface
+        const transformedData = subscriptionData ? {
+          customer_id: subscriptionData.customer_id,
+          subscription_id: subscriptionData.subscription_id,
+          subscription_status: subscriptionData.status,
+          price_id: subscriptionData.price_id,
+          current_period_start: subscriptionData.current_period_start,
+          current_period_end: subscriptionData.current_period_end,
+          cancel_at_period_end: subscriptionData.cancel_at_period_end,
+          payment_method_brand: subscriptionData.payment_method_brand,
+          payment_method_last4: subscriptionData.payment_method_last4,
+        } : null;
+
+        console.log('Transformed subscription data:', transformedData);
+        setSubscription(transformedData);
       } catch (err: any) {
         console.error('Error fetching Stripe subscription:', err);
         

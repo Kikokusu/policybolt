@@ -35,7 +35,7 @@ export function useSubscription() {
 
   // Map Stripe subscription to plan
   const getCurrentPlan = () => {
-    console.log('Getting current plan for subscription:', stripeSubscription);
+    console.log('Getting current plan for subscription:', stripeSubscription?.price_id, stripeSubscription?.subscription_status);
     
     if (!stripeSubscription?.price_id) return null;
     
@@ -46,19 +46,20 @@ export function useSubscription() {
     if (stripeSubscription.price_id === 'price_1RddANKSNriwT6N669BShQb0') {
       planName = 'Solo Developer';
       maxProjects = 1;
-      console.log('Mapped to Solo Developer plan');
+      console.log('Mapped to Solo Developer plan (1 project)');
     } else if (stripeSubscription.price_id === 'price_1RddB1KSNriwT6N6Ku1vE00V') {
       planName = 'Growing Startup';
       maxProjects = 5;
-      console.log('Mapped to Growing Startup plan');
+      console.log('Mapped to Growing Startup plan (5 projects)');
     } else {
       console.log('Unknown price_id:', stripeSubscription.price_id);
+      return null;
     }
     
     // Find plan in database or create a virtual one
     const dbPlan = plans.find(plan => plan.name === planName);
     if (dbPlan) {
-      console.log('Found plan in database:', dbPlan);
+      console.log('Found plan in database:', dbPlan.name, 'max_projects:', dbPlan.max_projects);
       return dbPlan;
     }
     
@@ -75,7 +76,7 @@ export function useSubscription() {
       updated_at: ''
     };
     
-    console.log('Created virtual plan:', virtualPlan);
+    console.log('Created virtual plan:', virtualPlan.name, 'max_projects:', virtualPlan.max_projects);
     return virtualPlan;
   };
 

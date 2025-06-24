@@ -105,10 +105,20 @@ export function AddProjectPage() {
 
   // Check project limits
   const getMaxProjects = () => {
-    console.log('Subscription data:', subscription);
-    console.log('Price ID:', subscription?.price_id);
+    console.log('Full subscription data for project limits:', subscription);
+    console.log('Subscription status:', subscription?.subscription_status);
+    console.log('Price ID for limits:', subscription?.price_id);
     
-    if (!subscription) return 0;
+    if (!subscription || !subscription.price_id) {
+      console.log('No subscription or price_id found');
+      return 0;
+    }
+
+    // Only allow project creation for active or trialing subscriptions
+    if (!['active', 'trialing'].includes(subscription.subscription_status || '')) {
+      console.log('Subscription not active or trialing:', subscription.subscription_status);
+      return 0;
+    }
     
     // Map Stripe price IDs to project limits
     if (subscription.price_id === 'price_1RddANKSNriwT6N669BShQb0') {
@@ -125,7 +135,7 @@ export function AddProjectPage() {
   
   const maxProjects = getMaxProjects();
   const activeProjects = projects.filter(p => p.status === 'active').length;
-  const canCreateProject = maxProjects === 999999 || activeProjects < maxProjects;
+  const canCreateProject = maxProjects > 0 && activeProjects < maxProjects;
   
   console.log('Max projects:', maxProjects);
   console.log('Active projects:', activeProjects);
