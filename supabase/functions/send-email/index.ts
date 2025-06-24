@@ -152,7 +152,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         from: 'policybolt@vcorrea.com',
-        to: ['vitorcorreadev@gmail.com', 'contact@vcorrea.com'],
+        to: ['vitorcorreadev@gmail.com', 'pamteck@gmail.com', 'ftnlabiola@gmail.com', 'ross.hughey@kikokusu.com'],
         subject: emailSubject,
         html: emailHtml,
         reply_to: email,
