@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { stripeProducts } from '@/stripe-config';
 
 interface StripeSubscription {
   customer_id: string;
@@ -55,7 +56,14 @@ export function useStripeSubscription() {
     }
 
     fetchSubscription();
-  }, [user]);
+  }, [user, signOut]);
+
+  const hasActiveSubscription = subscription?.subscription_status === 'active';
+
+  const getPlanName = () => {
+    if (!subscription?.price_id) {
+      return 'No Plan';
+    }
 
     // Find the plan name from stripe config
     const product = stripeProducts.find(p => p.priceId === subscription.price_id);
@@ -65,5 +73,12 @@ export function useStripeSubscription() {
     
     return 'Unknown Plan';
   };
-}
+
+  return {
+    subscription,
+    loading,
     error,
+    hasActiveSubscription,
+    getPlanName
+  };
+}
