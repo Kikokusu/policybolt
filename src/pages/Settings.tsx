@@ -20,7 +20,8 @@ import {
   DollarSign,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSubscription } from '@/hooks/useSubscription';
+import { useStripeSubscription } from '@/hooks/useStripeSubscription';
+import { CancellationWizard } from '@/components/CancellationWizard';
 
 const todoItems = [
   {
@@ -114,8 +115,9 @@ const statusColors = {
 
 export function SettingsPage() {
   const { user, loading: authLoading } = useAuth();
-  const { subscription, hasSubscription, loading: subscriptionLoading } = useSubscription();
+  const { subscription, hasActiveSubscription, loading: subscriptionLoading } = useStripeSubscription();
   const navigate = useNavigate();
+  const [showCancellationWizard, setShowCancellationWizard] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -123,11 +125,11 @@ export function SettingsPage() {
       return;
     }
 
-    if (!authLoading && !subscriptionLoading && user && !hasSubscription) {
+    if (!authLoading && !subscriptionLoading && user && !hasActiveSubscription) {
       navigate('/select-plan');
       return;
     }
-  }, [user, authLoading, subscriptionLoading, hasSubscription, navigate]);
+  }, [user, authLoading, subscriptionLoading, hasActiveSubscription, navigate]);
 
   if (authLoading || subscriptionLoading) {
     return (
@@ -140,12 +142,29 @@ export function SettingsPage() {
     );
   }
 
-  if (!user || !hasSubscription) {
+  if (!user || !hasActiveSubscription) {
     return null;
   }
 
   const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
   const userEmail = user.email || '';
+
+  // Get plan name from Stripe subscription
+  const getPlanName = () => {
+    if (!subscription) return 'Unknown Plan';
+    
+    // Map price IDs to plan names
+    const priceToName: { [key: string]: string } = {
+      'price_1RdSy5KSNriwT6N6QxdEu4Ct': 'Solo Developer',
+      'price_1RdSzKKSNriwT6N6Tlfyh1oV': 'Growing Startup',
+    };
+    
+    return priceToName[subscription.price_id || ''] || 'Pro Plan';
+  };
+
+  const isTrialing = subscription?.subscription_status === 'trialing';
+  const isActive = subscription?.subscription_status === 'active';
+  const canChangeplan = isActive; // Only allow plan changes for active subscriptions
 
   return (
     <div className="min-h-screen bg-background">
@@ -206,25 +225,27 @@ export function SettingsPage() {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Plan</span>
-                  <Badge variant="secondary">{subscription?.plan?.name || 'Unknown'}</Badge>
+                  <Badge variant="secondary">{getPlanName()}</Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Status</span>
                   <Badge 
                     variant="secondary" 
-                    className={subscription?.status === 'trial' ? 'bg-yellow-500 text-white' : 'bg-success text-white'}
+                    className={isTrialing ? 'bg-yellow-500 text-white' : 'bg-success text-white'}
                   >
-                    {subscription?.status === 'trial' ? 'Free Trial' : 'Active'}
+                    {isTrialing ? 'Free Trial' : 'Active'}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Price</span>
-                  <span className="text-sm">${subscription?.plan?.price || 0}/month</span>
+                  <span className="text-sm">
+                    {subscription?.price_id === 'price_1RdSy5KSNriwT6N6QxdEu4Ct' ? '£0.29' : '£0.79'}/month
+                  </span>
                 </div>
-                {subscription?.trial_ends_at && (
+                {isTrialing && subscription?.current_period_end && (
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Trial Ends</span>
-                    <span className="text-sm">{new Date(subscription.trial_ends_at).toLocaleDateString()}</span>
+                    <span className="text-sm">{new Date(subscription.current_period_end * 1000).toLocaleDateString()}</span>
                   </div>
                 )}
                 
@@ -233,13 +254,25 @@ export function SettingsPage() {
                     <CreditCard className="w-4 h-4 mr-2" />
                     Manage Billing (Todo)
                   </Button>
-                  <Button variant="outline" className="w-full" disabled>
-                    <DollarSign className="w-4 h-4 mr-2" />
-                    Change Plan (Todo)
-                  </Button>
-                  <Button variant="destructive" className="w-full" disabled>
+                  {canChangeplan ? (
+                    <Button variant="outline" className="w-full" disabled>
+                      <DollarSign className="w-4 h-4 mr-2" />
+                      Change Plan (Todo)
+                    </Button>
+                  ) : (
+                    <div className="text-center p-3 bg-muted/30 rounded-lg">
+                      <p className="text-xs text-muted-foreground">
+                        Plan changes are available after your trial period ends
+                      </p>
+                    </div>
+                  )}
+                  <Button 
+                    variant="destructive" 
+                    className="w-full"
+                    onClick={() => setShowCancellationWizard(true)}
+                  >
                     <AlertTriangle className="w-4 h-4 mr-2" />
-                    Cancel Subscription (Todo)
+                    {isTrialing ? 'Cancel Trial' : 'Cancel Subscription'}
                   </Button>
                 </div>
               </CardContent>
@@ -309,6 +342,16 @@ export function SettingsPage() {
           </div>
         </div>
       </div>
+
+      {/* Cancellation Wizard */}
+      <CancellationWizard
+        open={showCancellationWizard}
+        onOpenChange={setShowCancellationWizard}
+        onSuccess={() => {
+          // Refresh the page or redirect after successful cancellation
+          window.location.reload();
+        }}
+      />
     </div>
   );
 }
