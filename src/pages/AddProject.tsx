@@ -97,7 +97,6 @@ export function AddProjectPage() {
       return;
     }
 
-    if (!authLoading && !subscriptionLoading && user && !hasSubscription) {
     if (!authLoading && !subscriptionLoading && user && !hasActiveSubscription) {
       navigate('/select-plan');
       return;
