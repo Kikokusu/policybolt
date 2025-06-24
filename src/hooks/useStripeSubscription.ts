@@ -52,6 +52,12 @@ export function useStripeSubscription() {
 
   const hasActiveSubscription = subscription?.subscription_status === 'active' || subscription?.subscription_status === 'trialing';
 
+  // Map price IDs to plan names
+  const priceToName: { [key: string]: string } = {
+    'price_1RdSy5KSNriwT6N6QxdEu4Ct': 'Solo Developer', // Update this price ID
+    'price_1RdSzKKSNriwT6N6Tlfyh1oV': 'Growing Startup', // Update this price ID
+  };
+
   return {
     subscription,
     hasActiveSubscription,
