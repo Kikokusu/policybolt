@@ -136,11 +136,18 @@ Deno.serve(async (req) => {
       });
 
       try {
-        if (subscription.subscription_id && subscription.status !== 'canceled') {
+        // Cancel the Stripe subscription if it exists and is not already canceled
+        if (subscription.subscription_id && !['canceled', 'incomplete_expired'].includes(subscription.status)) {
           // Cancel the Stripe subscription
           await stripe.subscriptions.cancel(subscription.subscription_id);
           
           console.log(`Canceled subscription ${subscription.subscription_id} for user ${user.id}`);
+        } else if (subscription.status === 'trialing') {
+          // For trialing subscriptions, we still want to cancel to prevent future billing
+          if (subscription.subscription_id) {
+            await stripe.subscriptions.cancel(subscription.subscription_id);
+            console.log(`Canceled trial subscription ${subscription.subscription_id} for user ${user.id}`);
+          }
         }
 
         // Update our database
@@ -154,12 +161,12 @@ Deno.serve(async (req) => {
 
         return corsResponse({ 
           success: true, 
-          message: 'Subscription canceled successfully' 
+          message: subscription.status === 'trialing' ? 'Trial canceled successfully' : 'Subscription canceled successfully'
         });
 
       } catch (error: any) {
         console.error('Error canceling subscription:', error);
-        return corsResponse({ error: 'Failed to cancel subscription' }, 500);
+        return corsResponse({ error: `Failed to cancel ${subscription.status === 'trialing' ? 'trial' : 'subscription'}` }, 500);
       }
     }
 

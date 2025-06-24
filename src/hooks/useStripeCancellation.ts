@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 export function useStripeCancellation() {
   const [loading, setLoading] = useState(false);
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   const cancelSubscription = async (reason?: string, comment?: string) => {
     if (!user) {
@@ -40,7 +42,38 @@ export function useStripeCancellation() {
       }
 
       const result = await response.json();
+      
+      // After successful cancellation, disconnect GitHub from all projects
+      try {
+        const { error: projectsError } = await supabase
+          .from('projects')
+          .update({ 
+            github_synced: false,
+            repository_url: null,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id);
+
+        if (projectsError) {
+          console.error('Error disconnecting GitHub from projects:', projectsError);
+        }
+      } catch (projectError) {
+        console.error('Failed to disconnect GitHub from projects:', projectError);
+      }
+      
       toast.success(result.message || 'Subscription canceled successfully');
+      
+      // Sign out the user after successful cancellation
+      setTimeout(async () => {
+        try {
+          await signOut();
+          navigate('/auth/login');
+        } catch (signOutError) {
+          console.error('Error signing out:', signOutError);
+          // Force navigation even if sign out fails
+          navigate('/auth/login');
+        }
+      }, 2000); // Give time for the success message to be seen
       
       return result;
     } catch (error: any) {

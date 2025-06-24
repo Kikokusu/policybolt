@@ -138,19 +138,19 @@ export function CancellationWizard({ open, onOpenChange, onSuccess }: Cancellati
               <div className="flex items-center justify-between">
                 <span>Original price:</span>
                 <span className="line-through text-muted-foreground">
-                  {subscription?.price_id === 'price_1RdSy5KSNriwT6N6QxdEu4Ct' ? '£0.29' : '£0.79'}/month
+                  {subscription?.price_id === 'price_1RdSy5KSNriwT6N6QxdEu4Ct' ? '£29' : '£79'}/month
                 </span>
               </div>
               <div className="flex items-center justify-between font-semibold">
                 <span>Your price for 3 months:</span>
                 <span className="text-primary">
-                  {subscription?.price_id === 'price_1RdSy5KSNriwT6N6QxdEu4Ct' ? '£0.15' : '£0.40'}/month
+                  {subscription?.price_id === 'price_1RdSy5KSNriwT6N6QxdEu4Ct' ? '£14.50' : '£39.50'}/month
                 </span>
               </div>
             </div>
 
             <Badge variant="secondary" className="bg-success text-white">
-              Save {subscription?.price_id === 'price_1RdSy5KSNriwT6N6QxdEu4Ct' ? '£0.42' : '£1.17'} over 3 months
+              Save {subscription?.price_id === 'price_1RdSy5KSNriwT6N6QxdEu4Ct' ? '£43.50' : '£118.50'} over 3 months
             </Badge>
           </CardContent>
         </Card>
