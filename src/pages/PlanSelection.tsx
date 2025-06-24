@@ -14,15 +14,42 @@ import {
   AlertCircle,
   Loader2,
 } from 'lucide-react';
-import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/contexts/AuthContext';
+import { useStripe } from '@/hooks/useStripe';
+import { useStripeSubscription } from '@/hooks/useStripeSubscription';
+import { stripeProducts } from '@/stripe-config';
 import { toast } from 'sonner';
+
+const planFeatures = {
+  'Solo Developer Plan': [
+    '1 project/repository',
+    'Auto-updating privacy policies',
+    'Basic API monitoring',
+    'GDPR & CCPA compliance',
+    'Email support',
+    'GitHub integration',
+  ],
+  'Growing Startup': [
+    'Up to 5 projects',
+    'Advanced AI monitoring',
+    'All integrations',
+    'Global regulation coverage',
+    'Priority support',
+    'Team collaboration',
+    'Custom templates',
+  ],
+};
+
+const planPrices = {
+  'Solo Developer Plan': '£0.29',
+  'Growing Startup': '£0.79',
+};
 
 export function PlanSelectionPage() {
   const { user, loading: authLoading } = useAuth();
-  const { plans, createSubscription, loading: subscriptionLoading, hasSubscription } = useSubscription();
+  const { hasActiveSubscription, loading: subscriptionLoading } = useStripeSubscription();
+  const { createCheckoutSession, loading: checkoutLoading } = useStripe();
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -35,37 +62,29 @@ export function PlanSelectionPage() {
       }
       
       // If user already has a subscription, redirect to dashboard
-      if (!subscriptionLoading && hasSubscription) {
+      if (!subscriptionLoading && hasActiveSubscription) {
         navigate('/dashboard');
         return;
       }
     }
-  }, [user, authLoading, subscriptionLoading, hasSubscription, navigate]);
+  }, [user, authLoading, subscriptionLoading, hasActiveSubscription, navigate]);
 
-  const handlePlanSelect = async (planId: string) => {
+  const handlePlanSelect = async (priceId: string, planName: string) => {
     if (!user) {
       navigate('/auth/login');
       return;
     }
 
-    setIsCreating(true);
+    setSelectedPlanId(priceId);
     setError(null);
-    setSelectedPlanId(planId);
 
     try {
-      const { error } = await createSubscription(planId);
-      
-      if (error) {
-        throw error;
-      }
-
-      toast.success('Plan selected successfully! Welcome to PolicyBolt!');
-      navigate('/dashboard');
+      await createCheckoutSession(priceId, 'subscription');
     } catch (err: any) {
       console.error('Error selecting plan:', err);
-      setError(err.message || 'Failed to select plan. Please try again.');
+      setError(err.message || 'Failed to start checkout process. Please try again.');
+      toast.error('Failed to start checkout process');
     } finally {
-      setIsCreating(false);
       setSelectedPlanId(null);
     }
   };
@@ -88,7 +107,7 @@ export function PlanSelectionPage() {
   }
 
   // Don't render if user is not authenticated or already has subscription
-  if (!user || hasSubscription) {
+  if (!user || hasActiveSubscription) {
     return null;
   }
 
@@ -121,16 +140,17 @@ export function PlanSelectionPage() {
         )}
 
         {/* Plans Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {plans.map((plan, index) => {
-            const Icon = getPlanIcon(plan.name);
-            const isPopular = plan.name.includes('Growing');
-            const isEnterprise = plan.name.includes('Enterprise');
-            const isSelecting = isCreating && selectedPlanId === plan.id;
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          {stripeProducts.map((product, index) => {
+            const Icon = getPlanIcon(product.name);
+            const isPopular = product.name.includes('Growing');
+            const isSelecting = checkoutLoading && selectedPlanId === product.priceId;
+            const features = planFeatures[product.name as keyof typeof planFeatures] || [];
+            const price = planPrices[product.name as keyof typeof planPrices] || 'Custom';
 
             return (
               <Card
-                key={plan.id}
+                key={product.id}
                 className={`relative card-hover ${
                   isPopular ? 'ring-2 ring-primary shadow-xl scale-105' : ''
                 }`}
@@ -147,24 +167,18 @@ export function PlanSelectionPage() {
                   <div className="w-12 h-12 bg-gradient-primary rounded-lg flex items-center justify-center mx-auto mb-4">
                     <Icon className="w-6 h-6 text-white" />
                   </div>
-                  <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
+                  <CardTitle className="text-2xl font-bold">{product.name}</CardTitle>
                   <CardDescription className="text-base">
-                    {plan.description}
+                    {product.description}
                   </CardDescription>
                   <div className="mt-4">
                     <div className="flex items-baseline justify-center">
-                      <span className="text-4xl font-bold">
-                        {isEnterprise ? 'Custom' : `$${plan.price}`}
-                      </span>
-                      {!isEnterprise && (
-                        <span className="text-muted-foreground ml-1">/month</span>
-                      )}
+                      <span className="text-4xl font-bold">{price}</span>
+                      <span className="text-muted-foreground ml-1">/month</span>
                     </div>
-                    {!isEnterprise && (
-                      <p className="text-sm text-muted-foreground mt-2">
-                        14-day free trial included
-                      </p>
-                    )}
+                    <p className="text-sm text-muted-foreground mt-2">
+                      14-day free trial included
+                    </p>
                   </div>
                 </CardHeader>
                 
@@ -174,16 +188,14 @@ export function PlanSelectionPage() {
                       isPopular ? 'bg-primary hover:bg-primary/90' : ''
                     }`}
                     variant={isPopular ? 'default' : 'outline'}
-                    onClick={() => handlePlanSelect(plan.id)}
-                    disabled={isCreating || isEnterprise}
+                    onClick={() => handlePlanSelect(product.priceId, product.name)}
+                    disabled={checkoutLoading}
                   >
                     {isSelecting ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Selecting...
+                        Starting checkout...
                       </>
-                    ) : isEnterprise ? (
-                      'Contact Sales'
                     ) : (
                       <>
                         Start Free Trial
@@ -194,24 +206,12 @@ export function PlanSelectionPage() {
                   
                   <div className="space-y-3">
                     <div className="text-sm font-medium">What's included:</div>
-                    {plan.features.map((feature, featureIndex) => (
+                    {features.map((feature, featureIndex) => (
                       <div key={featureIndex} className="flex items-center text-sm">
                         <CheckCircle className="w-4 h-4 text-success mr-3 flex-shrink-0" />
                         <span>{feature}</span>
                       </div>
                     ))}
-                    
-                    <div className="pt-3 border-t">
-                      <div className="flex items-center text-sm font-medium">
-                        <Shield className="w-4 h-4 text-primary mr-2" />
-                        <span>
-                          {plan.max_projects === 999999 
-                            ? 'Unlimited projects' 
-                            : `Up to ${plan.max_projects} project${plan.max_projects > 1 ? 's' : ''}`
-                          }
-                        </span>
-                      </div>
-                    </div>
                   </div>
                 </CardContent>
               </Card>

@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSubscription } from '@/hooks/useSubscription';
+import { useStripeSubscription } from '@/hooks/useStripeSubscription';
 import { useProjects } from '@/hooks/useProjects';
 
 const getStatusColor = (status: string) => {
@@ -38,7 +38,7 @@ const getStatusColor = (status: string) => {
 
 export function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
-  const { subscription, loading: subscriptionLoading, hasSubscription } = useSubscription();
+  const { subscription, hasActiveSubscription, loading: subscriptionLoading } = useStripeSubscription();
   const { projects, totalPolicyUpdates, loading: projectsLoading } = useProjects();
   const navigate = useNavigate();
 
@@ -49,11 +49,11 @@ export function DashboardPage() {
     }
 
     // If user is authenticated but doesn't have a subscription, redirect to plan selection
-    if (!authLoading && !subscriptionLoading && user && !hasSubscription) {
+    if (!authLoading && !subscriptionLoading && user && !hasActiveSubscription) {
       navigate('/select-plan');
       return;
     }
-  }, [user, authLoading, subscriptionLoading, hasSubscription, navigate]);
+  }, [user, authLoading, subscriptionLoading, hasActiveSubscription, navigate]);
 
   if (authLoading || subscriptionLoading || projectsLoading) {
     return (
@@ -66,21 +66,32 @@ export function DashboardPage() {
     );
   }
 
-  if (!user || !hasSubscription) {
+  if (!user || !hasActiveSubscription) {
     return null; // Will redirect
   }
 
   const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
-  const planName = subscription?.plan?.name || 'Unknown Plan';
-  const maxProjects = subscription?.plan?.max_projects || 0;
   const activeProjects = projects.filter(p => p.status === 'active').length;
   const syncedProjects = projects.filter(p => p.github_synced).length;
+
+  // Get plan name from Stripe subscription
+  const getPlanName = () => {
+    if (!subscription) return 'Unknown Plan';
+    
+    // Map price IDs to plan names
+    const priceToName: { [key: string]: string } = {
+      'price_1RdSy5KSNriwT6N6QxdEu4Ct': 'Solo Developer',
+      'price_1RdSzKKSNriwT6N6Tlfyh1oV': 'Growing Startup',
+    };
+    
+    return priceToName[subscription.price_id || ''] || 'Pro Plan';
+  };
 
   const stats = [
     {
       title: 'Active Projects',
       value: activeProjects.toString(),
-      change: `${maxProjects === 999999 ? 'Unlimited' : maxProjects} max`,
+      change: 'Unlimited',
       icon: Code,
       trend: 'neutral',
     },
@@ -93,8 +104,8 @@ export function DashboardPage() {
     },
     {
       title: 'Plan Status',
-      value: subscription?.status === 'trial' ? 'Trial' : 'Active',
-      change: subscription?.status === 'trial' ? 'Free trial' : planName,
+      value: subscription?.subscription_status === 'trialing' ? 'Trial' : 'Active',
+      change: subscription?.subscription_status === 'trialing' ? 'Free trial' : getPlanName(),
       icon: Shield,
       trend: 'up',
     },
@@ -124,11 +135,14 @@ export function DashboardPage() {
               </p>
             </div>
             <div className="text-right">
-              <Badge variant="secondary" className="mb-2">
-                {planName}
+              <Badge 
+                variant="secondary" 
+                className={subscription?.subscription_status === 'active' ? 'bg-success text-white' : 'bg-yellow-500 text-white'}
+              >
+                {getPlanName()}
               </Badge>
               <p className="text-sm text-muted-foreground">
-                {maxProjects === 999999 ? 'Unlimited projects' : `${maxProjects} project${maxProjects > 1 ? 's' : ''} max`}
+                {subscription?.subscription_status === 'trialing' ? 'Free Trial Active' : 'Subscription Active'}
               </p>
             </div>
           </div>
