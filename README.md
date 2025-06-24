@@ -144,15 +144,15 @@ Tracks policy update frequency per project.
 ### **Policy Distribution**
 1. User can download active policies as Markdown
 2. User can get embed code for website integration
-3. Embed widget automatically shows latest active policy
+3. Embed widget automatically shows latest active 
 
-## 🚧 Pending Work
-
-### **🔴 High Priority - Payment Integration**
+### ** Payment Integration**
 - **Stripe Integration**: Complete payment processing for plan subscriptions
 - **Subscription Management**: Allow users to upgrade/downgrade plans
 - **Cancellation Flow**: Implement cancellation with retention offers (50% discount for 3 months)
 - **Billing Dashboard**: Invoice history, payment methods, billing cycles
+
+## 🚧 Pending Work
 
 ### **🔴 High Priority - GitHub Integration**
 - **GitHub OAuth/App**: Authenticate and connect repositories
@@ -167,7 +167,7 @@ Tracks policy update frequency per project.
 - **Custom Templates**: Allow users to customize policy templates
 - **API Access**: REST API for programmatic policy management
 
-### **🟡 Medium Priority - User Experience**
+### **🟢 Low Priority - User Experience**
 - **Onboarding Tour**: Guided tour for new users
 - **Policy Preview**: Live preview during project setup
 - **Bulk Operations**: Manage multiple projects/policies at once
