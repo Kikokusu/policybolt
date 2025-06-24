@@ -85,11 +85,11 @@ export function SettingsPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
           {/* Left Column - Account Information */}
-          <div>
+          <div className="h-full">
             {/* Account Information */}
-            <Card className="shadow-lg border-0">
+            <Card className="shadow-lg border-0 h-full">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <User className="w-5 h-5" />
@@ -120,9 +120,9 @@ export function SettingsPage() {
           </div>
           
           {/* Right Column - Current Subscription */}
-          <div>
+          <div className="h-full">
             {/* Current Subscription */}
-            <Card className="shadow-lg border-0">
+            <Card className="shadow-lg border-0 h-full">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <CreditCard className="w-5 h-5" />
@@ -146,7 +146,7 @@ export function SettingsPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Price</span>
                   <span className="text-sm">
-                    {subscription?.price_id === 'price_1RdSy5KSNriwT6N6QxdEu4Ct' ? '£29' : '£79'}/month
+                    {subscription?.price_id === 'price_1RdTBsKSNriwT6N60Z6lrIQQ' ? '£29' : '£79'}/month
                   </span>
                 </div>
                 {isTrialing && subscription?.current_period_end && (
