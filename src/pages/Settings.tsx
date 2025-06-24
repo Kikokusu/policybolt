@@ -10,9 +10,11 @@ import {
   Settings as SettingsIcon,
   AlertTriangle,
   DollarSign,
+  Loader2,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStripeSubscription } from '@/hooks/useStripeSubscription';
+import { useStripeBilling } from '@/hooks/useStripeBilling';
 import { CancellationWizard } from '@/components/CancellationWizard';
 import { stripeProducts } from '@/stripe-config';
 import { toast } from 'sonner';
@@ -20,6 +22,7 @@ import { toast } from 'sonner';
 export function SettingsPage() {
   const { user, loading: authLoading } = useAuth();
   const { subscription, hasActiveSubscription, loading: subscriptionLoading } = useStripeSubscription();
+  const { openBillingPortal, loading: billingLoading } = useStripeBilling();
   const navigate = useNavigate();
   const [showCancellationWizard, setShowCancellationWizard] = useState(false);
 
@@ -69,6 +72,14 @@ export function SettingsPage() {
   const isTrialing = subscription?.subscription_status === 'trialing';
   const isActive = subscription?.subscription_status === 'active';
   const canChangeplan = isActive; // Only allow plan changes for active subscriptions
+
+  const handleManageBilling = async () => {
+    try {
+      await openBillingPortal();
+    } catch (error) {
+      // Error is already handled by the hook
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -157,9 +168,23 @@ export function SettingsPage() {
                 )}
                 
                 <div className="space-y-2 pt-4 border-t">
-                  <Button variant="outline" className="w-full" disabled>
+                  <Button 
+                    variant="outline" 
+                    className="w-full" 
+                    onClick={handleManageBilling}
+                    disabled={billingLoading}
+                  >
+                    {billingLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Opening...
+                      </>
+                    ) : (
+                      <>
                     <CreditCard className="w-4 h-4 mr-2" />
-                    Manage Billing (Todo)
+                        Manage Billing
+                      </>
+                    )}
                   </Button>
                   {canChangeplan ? (
                     <Button variant="outline" className="w-full">
