@@ -192,12 +192,30 @@ Tracks policy update frequency per project.
 ## 📝 Environment Variables Required
 
 ```env
+# Supabase Configuration
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# Email Service (Resend API)
 RESEND_API_KEY=your_resend_api_key
+
+# Stripe Configuration (for payment processing)
+STRIPE_SECRET_KEY=your_stripe_secret_key
+STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
+
+# Application Configuration
+VITE_APP_URL=http://localhost:5173
+
+# Email Configuration (for Supabase Edge Functions)
+FROM_EMAIL=noreply@yourdomain.com
+TO_EMAILS=support@yourdomain.com,admin@yourdomain.com
 ```
 
-**Note**: The `RESEND_API_KEY` must also be configured in your Supabase project's Edge Functions environment variables for the `send-email` function to work properly.
+**Important Notes:**
+- All environment variables must be configured in your deployment environment
+- For Supabase Edge Functions, configure `RESEND_API_KEY`, `FROM_EMAIL`, and `TO_EMAILS` in your Supabase project's Edge Functions environment variables
+- For Stripe integration, configure `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` in your Supabase project's Edge Functions environment variables
+- Copy `.env.example` to `.env` and fill in your actual values for local development
 
 ## 🚀 Deployment
 
