@@ -582,12 +582,6 @@ export function ProfilePage() {
                         </Button>
                       }
                     />
-                    <Button variant="ghost" size="sm" asChild className="w-full">
-                      <RouterLink to="/contact">
-                        <Mail className="w-4 h-4 mr-2" />
-                        General Contact
-                      </RouterLink>
-                    </Button>
                   </div>
                 </div>
               </CardContent>
