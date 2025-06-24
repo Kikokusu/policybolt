@@ -137,7 +137,7 @@ export function CancellationWizard({ open, onOpenChange, onSuccess }: Cancellati
               Get 50% off your subscription for the next 3 months
             </CardDescription>
           </CardHeader>
-          <CardContent className="text-center space-y-4">
+          <CardContent className="text-center space-y-4 bg-white-100">
             <div className="bg-white/50 rounded-lg p-4">
               <div className="text-3xl font-bold text-primary mb-2">
                 <span className="text-red-500">50% OFF</span>
