@@ -57,12 +57,13 @@ export function useStripeSubscription() {
     fetchSubscription();
   }, [user]);
 
-  const hasActiveSubscription = subscription?.subscription_status === 'active' || subscription?.subscription_status === 'trialing';
-
-  return {
-    subscription,
-    hasActiveSubscription,
-    loading,
-    return 'Test Plan';
+    // Find the plan name from stripe config
+    const product = stripeProducts.find(p => p.priceId === subscription.price_id);
+    if (product) {
+      return product.name.replace(' Plan', ''); // Remove "Plan" suffix for cleaner display
+    }
+    
+    return 'Unknown Plan';
   };
 }
+    error,
