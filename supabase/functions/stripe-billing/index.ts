@@ -2,8 +2,24 @@ import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import Stripe from 'npm:stripe@17.7.0';
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1';
 
-const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
-const stripeSecret = Deno.env.get('STRIPE_SECRET_KEY')!;
+// Validate required environment variables
+const supabaseUrl = Deno.env.get('SUPABASE_URL');
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+const stripeSecret = Deno.env.get('STRIPE_SECRET_KEY');
+
+if (!supabaseUrl) {
+  throw new Error('SUPABASE_URL environment variable is required');
+}
+
+if (!supabaseServiceKey) {
+  throw new Error('SUPABASE_SERVICE_ROLE_KEY environment variable is required');
+}
+
+if (!stripeSecret) {
+  throw new Error('STRIPE_SECRET_KEY environment variable is required');
+}
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 const stripe = new Stripe(stripeSecret, {
   appInfo: {
     name: 'Bolt Integration',
@@ -48,7 +64,11 @@ Deno.serve(async (req) => {
       return corsResponse({ error: 'return_url is required' }, 400);
     }
 
-    const authHeader = req.headers.get('Authorization')!;
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return corsResponse({ error: 'Authorization header is required' }, 401);
+    }
+
     const token = authHeader.replace('Bearer ', '');
     const {
       data: { user },
@@ -56,6 +76,7 @@ Deno.serve(async (req) => {
     } = await supabase.auth.getUser(token);
 
     if (getUserError || !user) {
+      console.error('Authentication error:', getUserError);
       return corsResponse({ error: 'Failed to authenticate user' }, 401);
     }
 
@@ -68,6 +89,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (getCustomerError || !customer) {
+      console.error('Customer lookup error:', getCustomerError);
       return corsResponse({ error: 'Customer not found' }, 404);
     }
 
@@ -85,13 +107,19 @@ Deno.serve(async (req) => {
         session_id: portalSession.id 
       });
 
-    } catch (error: any) {
-      console.error('Error creating billing portal session:', error);
-      return corsResponse({ error: 'Failed to create billing portal session' }, 500);
+    } catch (stripeError: any) {
+      console.error('Stripe API error:', stripeError);
+      return corsResponse({ 
+        error: 'Failed to create billing portal session',
+        details: stripeError.message 
+      }, 500);
     }
 
   } catch (error: any) {
     console.error('Billing portal endpoint error:', error);
-    return corsResponse({ error: error.message }, 500);
+    return corsResponse({ 
+      error: 'Internal server error',
+      details: error.message 
+    }, 500);
   }
 });
