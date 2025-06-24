@@ -255,9 +255,9 @@ export function SettingsPage() {
                     Manage Billing (Todo)
                   </Button>
                   {canChangeplan ? (
-                    <Button variant="outline" className="w-full" disabled>
+                    <Button variant="outline" className="w-full">
                       <DollarSign className="w-4 h-4 mr-2" />
-                      Change Plan (Todo)
+                      Change Plan
                     </Button>
                   ) : (
                     <div className="text-center p-3 bg-muted/30 rounded-lg">
