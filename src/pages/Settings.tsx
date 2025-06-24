@@ -15,6 +15,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useStripeSubscription } from '@/hooks/useStripeSubscription';
 import { CancellationWizard } from '@/components/CancellationWizard';
+import { SupportRequestForm } from '@/components/SupportRequestForm';
 import { stripeProducts } from '@/stripe-config';
 import { toast } from 'sonner';
 
@@ -196,6 +197,41 @@ export function SettingsPage() {
             </Card>
           </div>
 
+          {/* Support Section */}
+          <div className="lg:col-span-2">
+            <Card className="shadow-lg border-0">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <SettingsIcon className="w-5 h-5" />
+                  <span>Support & Help</span>
+                </CardTitle>
+                <CardDescription>
+                  Need assistance? Our support team is here to help you with any questions or issues.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <SupportRequestForm />
+                  <Button variant="outline" asChild>
+                    <RouterLink to="/contact">
+                      <CreditCard className="w-4 h-4 mr-2" />
+                      General Contact
+                    </RouterLink>
+                  </Button>
+                </div>
+                
+                <div className="mt-6 p-4 bg-muted/30 rounded-lg">
+                  <h4 className="font-medium mb-2">Quick Help</h4>
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    <p>• Check our documentation for common questions</p>
+                    <p>• Use the support form for technical issues</p>
+                    <p>• Billing questions are handled within 4 hours</p>
+                    <p>• Critical issues receive priority support</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
 

@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
+import { SupportRequestForm } from '@/components/SupportRequestForm';
 import { stripeProducts } from '@/stripe-config';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -565,15 +566,27 @@ export function ProfilePage() {
             <Card className="shadow-lg border-0 bg-muted/30">
               <CardContent className="p-6">
                 <div className="text-center">
-                  <Mail className="w-12 h-12 text-primary mx-auto mb-4" />
+                  <LifeBuoy className="w-12 h-12 text-primary mx-auto mb-4" />
                   <h3 className="font-semibold mb-2">Need Help?</h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Contact our support team if you need assistance with your account.
+                    Get help from our support team or contact us directly.
                   </p>
-                  <Button variant="outline" size="sm">
-                    <Mail className="w-4 h-4 mr-2" />
-                    Contact Support
-                  </Button>
+                  <div className="space-y-2">
+                    <SupportRequestForm 
+                      trigger={
+                        <Button variant="outline" size="sm" className="w-full">
+                          <LifeBuoy className="w-4 h-4 mr-2" />
+                          Request Support
+                        </Button>
+                      }
+                    />
+                    <Button variant="ghost" size="sm" asChild className="w-full">
+                      <RouterLink to="/contact">
+                        <Mail className="w-4 h-4 mr-2" />
+                        General Contact
+                      </RouterLink>
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
