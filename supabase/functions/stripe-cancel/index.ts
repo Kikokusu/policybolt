@@ -159,6 +159,27 @@ Deno.serve(async (req) => {
           })
           .eq('customer_id', customer.customer_id);
 
+        // Deactivate all user projects when subscription is canceled
+        try {
+          const { error: projectsError } = await supabase
+            .from('projects')
+            .update({ 
+              status: 'inactive',
+              github_synced: false,
+              updated_at: new Date().toISOString()
+            })
+            .eq('user_id', user.id);
+
+          if (projectsError) {
+            console.error('Error deactivating user projects:', projectsError);
+            // Don't fail the cancellation if project update fails, just log it
+          } else {
+            console.log(`Deactivated all projects for user ${user.id} after subscription cancellation`);
+          }
+        } catch (projectError) {
+          console.error('Failed to deactivate user projects:', projectError);
+          // Don't fail the cancellation if project update fails
+        }
         return corsResponse({ 
           success: true, 
           message: subscription.status === 'trialing' ? 'Trial canceled successfully' : 'Subscription canceled successfully'
