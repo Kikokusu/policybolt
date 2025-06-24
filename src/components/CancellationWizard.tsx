@@ -142,7 +142,7 @@ export function CancellationWizard({ open, onOpenChange, onSuccess }: Cancellati
               <div className="text-3xl font-bold text-primary mb-2">
                 <span className="text-red-500">50% OFF</span>
               </div>
-              <div className="text-sm text-foreground bg-red-100">
+              <div className="text-sm text-foreground">
                 {isTrialing 
                   ? 'This discount will apply after your trial ends'
                   : 'Starting with your next billing cycle'
