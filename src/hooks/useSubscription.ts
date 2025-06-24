@@ -37,12 +37,36 @@ export function useSubscription() {
   const getCurrentPlan = () => {
     if (!stripeSubscription?.price_id) return null;
     
-    // Find matching plan from Stripe config
-    const stripeProduct = stripeProducts.find(p => p.priceId === stripeSubscription.price_id);
-    if (!stripeProduct) return null;
+    // Map Stripe price IDs to plan names and find in database
+    let planName = '';
+    let maxProjects = 0;
     
-    // Find corresponding plan in database
-    return plans.find(plan => plan.name === stripeProduct.name) || null;
+    if (stripeSubscription.price_id === 'price_1RddANKSNriwT6N669BShQb0') {
+      planName = 'Solo Developer';
+      maxProjects = 1;
+    } else if (stripeSubscription.price_id === 'price_1RddB1KSNriwT6N6Ku1vE00V') {
+      planName = 'Growing Startup';
+      maxProjects = 5;
+    }
+    
+    // Find plan in database or create a virtual one
+    const dbPlan = plans.find(plan => plan.name === planName);
+    if (dbPlan) {
+      return dbPlan;
+    }
+    
+    // Create virtual plan if not found in database
+    return {
+      id: stripeSubscription.price_id,
+      name: planName,
+      description: '',
+      price: stripeSubscription.price_id === 'price_1RddANKSNriwT6N669BShQb0' ? 29 : 79,
+      max_projects: maxProjects,
+      features: [],
+      is_active: true,
+      created_at: '',
+      updated_at: ''
+    };
   };
 
   // Create a subscription-like object for compatibility

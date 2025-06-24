@@ -104,7 +104,20 @@ export function AddProjectPage() {
   }, [user, authLoading, subscriptionLoading, hasSubscription, navigate]);
 
   // Check project limits
-  const maxProjects = subscription?.plan?.max_projects || 0;
+  const getMaxProjects = () => {
+    if (!subscription) return 0;
+    
+    // Map Stripe price IDs to project limits
+    if (subscription.price_id === 'price_1RddANKSNriwT6N669BShQb0') {
+      return 1; // Solo Developer
+    } else if (subscription.price_id === 'price_1RddB1KSNriwT6N6Ku1vE00V') {
+      return 5; // Growing Startup
+    }
+    
+    return 0;
+  };
+  
+  const maxProjects = getMaxProjects();
   const activeProjects = projects.filter(p => p.status === 'active').length;
   const canCreateProject = maxProjects === 999999 || activeProjects < maxProjects;
 
