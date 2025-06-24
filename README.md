@@ -165,19 +165,11 @@ Tracks policy update frequency per project.
 - **Email Notifications**: Notify users of policy updates and approvals
 - **Team Collaboration**: Multi-user access for Growing Startup+ plans
 - **Custom Templates**: Allow users to customize policy templates
-- **API Access**: REST API for programmatic policy management
 
-### **🟢 Low Priority - User Experience**
-- **Onboarding Tour**: Guided tour for new users
-- **Policy Preview**: Live preview during project setup
-- **Bulk Operations**: Manage multiple projects/policies at once
-- **Advanced Analytics**: Policy update trends, compliance tracking
+### **🟢 Low Priority - ChatBot**
+- **Chatbot Agent Landing Page**: Chat live for instant answers about PolicyBolt.
+- **Chatbot Agent Subscriber**: Instant answers to compliance and privacy policy questions.
 
-### **🟢 Low Priority - Advanced Features**
-- **White-label Solutions**: Custom branding for Enterprise plans
-- **Legal Review Service**: Professional legal review option
-- **Compliance Monitoring**: Automated compliance checking
-- **Integration Marketplace**: Connect with other legal/compliance tools
 
 ## 🛠️ Technical Stack
 
