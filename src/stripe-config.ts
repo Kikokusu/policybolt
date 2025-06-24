@@ -9,7 +9,7 @@ export interface StripeProduct {
 export const stripeProducts: StripeProduct[] = [
   {
     id: 'prod_SYa8awaf74Iiis',
-    priceId: 'price_1RdSy5KSNriwT6N6QxdEu4Ct', // Update this to your active Solo Developer price ID
+    priceId: 'price_1RdTBsKSNriwT6N60Z6lrIQQ', // Update this to your active Solo Developer price ID
     name: 'Solo Developer Plan',
     description: 'Perfect for indie makers and solo founders. Includes 1 project with GitHub integration, auto-updating privacy policies, limited compliance coverage and email support.',
     mode: 'subscription',
