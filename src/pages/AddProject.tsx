@@ -105,21 +105,31 @@ export function AddProjectPage() {
 
   // Check project limits
   const getMaxProjects = () => {
+    console.log('Subscription data:', subscription);
+    console.log('Price ID:', subscription?.price_id);
+    
     if (!subscription) return 0;
     
     // Map Stripe price IDs to project limits
     if (subscription.price_id === 'price_1RddANKSNriwT6N669BShQb0') {
+      console.log('Matched Solo Developer plan');
       return 1; // Solo Developer
     } else if (subscription.price_id === 'price_1RddB1KSNriwT6N6Ku1vE00V') {
+      console.log('Matched Growing Startup plan');
       return 5; // Growing Startup
     }
     
+    console.log('No plan matched, returning 0');
     return 0;
   };
   
   const maxProjects = getMaxProjects();
   const activeProjects = projects.filter(p => p.status === 'active').length;
   const canCreateProject = maxProjects === 999999 || activeProjects < maxProjects;
+  
+  console.log('Max projects:', maxProjects);
+  console.log('Active projects:', activeProjects);
+  console.log('Can create project:', canCreateProject);
 
   if (authLoading || subscriptionLoading) {
     return (

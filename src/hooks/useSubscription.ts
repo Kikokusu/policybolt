@@ -35,6 +35,8 @@ export function useSubscription() {
 
   // Map Stripe subscription to plan
   const getCurrentPlan = () => {
+    console.log('Getting current plan for subscription:', stripeSubscription);
+    
     if (!stripeSubscription?.price_id) return null;
     
     // Map Stripe price IDs to plan names and find in database
@@ -44,19 +46,24 @@ export function useSubscription() {
     if (stripeSubscription.price_id === 'price_1RddANKSNriwT6N669BShQb0') {
       planName = 'Solo Developer';
       maxProjects = 1;
+      console.log('Mapped to Solo Developer plan');
     } else if (stripeSubscription.price_id === 'price_1RddB1KSNriwT6N6Ku1vE00V') {
       planName = 'Growing Startup';
       maxProjects = 5;
+      console.log('Mapped to Growing Startup plan');
+    } else {
+      console.log('Unknown price_id:', stripeSubscription.price_id);
     }
     
     // Find plan in database or create a virtual one
     const dbPlan = plans.find(plan => plan.name === planName);
     if (dbPlan) {
+      console.log('Found plan in database:', dbPlan);
       return dbPlan;
     }
     
     // Create virtual plan if not found in database
-    return {
+    const virtualPlan = {
       id: stripeSubscription.price_id,
       name: planName,
       description: '',
@@ -67,6 +74,9 @@ export function useSubscription() {
       created_at: '',
       updated_at: ''
     };
+    
+    console.log('Created virtual plan:', virtualPlan);
+    return virtualPlan;
   };
 
   // Create a subscription-like object for compatibility
@@ -82,6 +92,8 @@ export function useSubscription() {
     updated_at: '',
     plan: getCurrentPlan()
   } : null;
+  
+  console.log('Final subscription object:', subscription);
 
   const createSubscription = async (planId: string) => {
     // This would typically redirect to Stripe checkout

@@ -28,6 +28,7 @@ export function useStripeSubscription() {
           throw error;
         }
 
+        console.log('Stripe subscription data:', data);
         setSubscription(data);
       } catch (err: any) {
         console.error('Error fetching Stripe subscription:', err);
