@@ -60,11 +60,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut()
-    
-    // If the session doesn't exist on the server, treat it as a successful logout
-    // since the user is effectively already logged out
-    if (error && error.message === 'Session from session_id claim in JWT does not exist') {
+    try {
+      const { error } = await supabase.auth.signOut()
+      
+      // If the session doesn't exist on the server, treat it as a successful logout
+      // since the user is effectively already logged out
+      if (error && error.message === 'Session from session_id claim in JWT does not exist') {
+        return { error: null }
+      }
+      
+      return { error }
+    } catch (exception: any) {
+      // Handle cases where the Supabase client throws an exception
+      // for sessions that don't exist on the server
+      if (exception.message && exception.message.includes('Session from session_id claim in JWT does not exist')) {
+        return { error: null }
+      }
+      
+      // Re-throw other unexpected exceptions
+      throw exception
+    }
+  }
+
+  const value = {
+    user,
+    session,
+    loading,
+    signUp,
+    signIn,
+    signOut,
+  }
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  )
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext)
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider')
+  }
+  return context
+}
+
       return { error: null }
     }
     
