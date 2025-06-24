@@ -186,9 +186,6 @@ export function SettingsPage() {
                   <label className="text-sm font-medium text-muted-foreground">Member Since</label>
                   <p className="text-sm">{new Date(user.created_at).toLocaleDateString()}</p>
                 </div>
-                <Button variant="outline" className="w-full" disabled>
-                  Edit Profile (Todo)
-                </Button>
                 <Button variant="outline" className="w-full" asChild>
                   <RouterLink to="/dashboard/profile">
                     <User className="w-4 h-4 mr-2" />
