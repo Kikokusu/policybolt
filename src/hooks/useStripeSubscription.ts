@@ -15,7 +15,7 @@ interface StripeSubscription {
 }
 
 export function useStripeSubscription() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [subscription, setSubscription] = useState<StripeSubscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,6 +41,13 @@ export function useStripeSubscription() {
         setSubscription(data);
       } catch (err: any) {
         console.error('Error fetching Stripe subscription:', err);
+        
+        // Handle JWT expired error by signing out the user
+        if (err.message?.includes('JWT expired') || err.code === 'PGRST301') {
+          await signOut();
+          return;
+        }
+        
         setError(err.message || 'Failed to load subscription');
       } finally {
         setLoading(false);
