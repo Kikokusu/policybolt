@@ -29,7 +29,9 @@ import {
   Loader2,
   Eye,
   EyeOff,
+  LifeBuoy,
 } from 'lucide-react';
+import { Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
 import { SupportRequestForm } from '@/components/SupportRequestForm';

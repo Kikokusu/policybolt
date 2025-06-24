@@ -86,26 +86,6 @@ export function ContactPage() {
   // Show loading state
   const isSubmitting = emailLoading;
 
-  const onSubmit = async (data: ContactFormData) => {
-    setError(null);
-
-    try {
-      const result = await sendEmail({
-        type: 'contact',
-        name: data.name,
-        email: data.email,
-        subject: data.subject,
-        message: data.message,
-        company: data.company,
-      });
-
-      if (result.success) {
-      reset();
-      }
-    } catch (err) {
-      setError('Failed to send message. Please try again.');
-    }
-  };
 
   return (
     <div className="min-h-screen">
@@ -250,7 +230,7 @@ export function ContactPage() {
                     )}
                   </div>
 
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  <Button type="submit" className="w-full" disabled={isSubmitting}>
                     {isSubmitting ? (
                       'Sending...'
                     ) : (
