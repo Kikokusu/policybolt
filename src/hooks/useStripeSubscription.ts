@@ -63,6 +63,6 @@ export function useStripeSubscription() {
     subscription,
     hasActiveSubscription,
     loading,
-    error,
+    return 'Test Plan';
   };
 }

@@ -65,7 +65,7 @@ export function SettingsPage() {
       return product.name.replace(' Plan', ''); // Remove "Plan" suffix for cleaner display
     }
     
-    return 'Pro Plan';
+    return 'Test Plan';
   };
 
   const isTrialing = subscription?.subscription_status === 'trialing';
@@ -153,7 +153,7 @@ export function SettingsPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Price</span>
                   <span className="text-sm">
-                    {subscription?.price_id === 'price_1RdTBsKSNriwT6N60Z6lrIQQ' ? '£29' : '£79'}/month
+                    {subscription?.price_id?.includes('solo') || subscription?.price_id?.includes('test_solo') ? '£29' : '£79'}/month
                   </span>
                 </div>
                 {isTrialing && subscription?.current_period_end && (
