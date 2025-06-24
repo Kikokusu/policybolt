@@ -18,45 +18,63 @@ export function useEmailSender() {
     setLoading(true);
 
     try {
+      // Validate environment variable
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      if (!supabaseUrl) {
+        throw new Error('Supabase URL not configured');
+      }
+
       // Get auth token for support requests
       let headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        'Accept': 'application/json',
       };
+
+      // Add Supabase anon key if available
+      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      if (anonKey) {
+        headers['apikey'] = anonKey;
+      }
 
       if (emailData.type === 'support') {
         const { data: { session } } = await supabase.auth.getSession();
-        if (session?.access_token) {
-          headers['Authorization'] = `Bearer ${session.access_token}`;
+        if (!session?.access_token) {
+          throw new Error('Authentication required for support requests');
         }
+        headers['Authorization'] = `Bearer ${session.access_token}`;
       }
 
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-email`, {
+      // Construct the Edge Function URL
+      const functionUrl = `${supabaseUrl}/functions/v1/send-email`;
+      console.log('Sending email to:', functionUrl);
+      console.log('Email data:', emailData);
+
+      const response = await fetch(functionUrl, {
         method: 'POST',
         headers,
         body: JSON.stringify(emailData),
-        mode: 'cors',
       });
 
-      // Check if response is ok first
-      if (!response.ok) {
-        let errorMessage = 'Failed to send email';
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.error || errorMessage;
-        } catch (parseError) {
-          // If we can't parse the error response, use the status text
-          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-        }
-        throw new Error(errorMessage);
+      // Log response details for debugging
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+      // Read response text first
+      const responseText = await response.text();
+      console.log('Raw response:', responseText);
+
+      // Try to parse as JSON
+      let responseData;
+      try {
+        responseData = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Failed to parse response as JSON:', responseText);
+        throw new Error(`Invalid response from server: ${responseText.substring(0, 100)}`);
       }
 
-      let result;
-      try {
-        result = await response.json();
-      } catch (parseError) {
-        // If response is ok but not JSON, treat as success
-        result = { success: true };
+      console.log('Parsed response data:', responseData);
+
+      if (!response.ok) {
+        throw new Error(responseData.error || `Failed to send email (${response.status})`);
       }
       
       if (emailData.type === 'support') {
@@ -65,24 +83,25 @@ export function useEmailSender() {
         toast.success('Message sent successfully! We\'ll get back to you soon.');
       }
 
-      return { success: true, data: result };
+      return { success: true, data: responseData };
     } catch (error: any) {
       console.error('Error sending email:', error);
       
       // Provide more specific error messages
       let errorMessage = 'Failed to send email. Please try again.';
-      if (error.message) {
-        if (error.message.includes('NetworkError') || error.message.includes('fetch')) {
-          errorMessage = 'Network error. Please check your connection and try again.';
-        } else if (error.message.includes('CORS')) {
-          errorMessage = 'Configuration error. Please contact support.';
-        } else {
-          errorMessage = error.message;
-        }
+      
+      if (error.message.includes('Supabase URL not configured')) {
+        errorMessage = 'Email service is not properly configured.';
+      } else if (error.message.includes('Authentication required')) {
+        errorMessage = 'Please log in to send support requests.';
+      } else if (error.message.includes('fetch')) {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      } else if (error.message) {
+        errorMessage = error.message;
       }
       
       toast.error(errorMessage);
-      return { success: false, error: error.message };
+      return { success: false, error: errorMessage };
     } finally {
       setLoading(false);
     }
