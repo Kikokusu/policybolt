@@ -10,15 +10,41 @@ export interface Plan {
   updated_at: string;
 }
 
-export interface UserSubscription {
-  id: string;
+export interface StripeCustomer {
+  id: number;
   user_id: string;
-  plan_id: string;
-  status: 'trial' | 'active' | 'cancelled' | 'expired';
-  trial_ends_at: string | null;
+  customer_id: string;
   created_at: string;
   updated_at: string;
-  plan?: Plan;
+  deleted_at: string | null;
+}
+
+export interface StripeSubscription {
+  id: number;
+  customer_id: string;
+  subscription_id: string | null;
+  price_id: string | null;
+  current_period_start: number | null;
+  current_period_end: number | null;
+  cancel_at_period_end: boolean;
+  payment_method_brand: string | null;
+  payment_method_last4: string | null;
+  status: 'not_started' | 'incomplete' | 'incomplete_expired' | 'trialing' | 'active' | 'past_due' | 'canceled' | 'unpaid' | 'paused';
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export interface StripeUserSubscription {
+  customer_id: string | null;
+  subscription_id: string | null;
+  subscription_status: 'not_started' | 'incomplete' | 'incomplete_expired' | 'trialing' | 'active' | 'past_due' | 'canceled' | 'unpaid' | 'paused' | null;
+  price_id: string | null;
+  current_period_start: number | null;
+  current_period_end: number | null;
+  cancel_at_period_end: boolean | null;
+  payment_method_brand: string | null;
+  payment_method_last4: string | null;
 }
 
 export interface Project {
@@ -67,10 +93,15 @@ export interface Database {
         Insert: Omit<Plan, 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<Omit<Plan, 'id' | 'created_at' | 'updated_at'>>;
       };
-      user_subscriptions: {
-        Row: UserSubscription;
-        Insert: Omit<UserSubscription, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<UserSubscription, 'id' | 'created_at' | 'updated_at'>>;
+      stripe_customers: {
+        Row: StripeCustomer;
+        Insert: Omit<StripeCustomer, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<StripeCustomer, 'id' | 'created_at' | 'updated_at'>>;
+      };
+      stripe_subscriptions: {
+        Row: StripeSubscription;
+        Insert: Omit<StripeSubscription, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<StripeSubscription, 'id' | 'created_at' | 'updated_at'>>;
       };
       projects: {
         Row: Project;
@@ -86,6 +117,11 @@ export interface Database {
         Row: Policy;
         Insert: Omit<Policy, 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<Omit<Policy, 'id' | 'created_at' | 'updated_at'>>;
+      };
+    };
+    Views: {
+      stripe_user_subscriptions: {
+        Row: StripeUserSubscription;
       };
     };
     Functions: {

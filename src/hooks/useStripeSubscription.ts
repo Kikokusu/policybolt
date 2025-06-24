@@ -2,22 +2,11 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { stripeProducts } from '@/stripe-config';
-
-interface StripeSubscription {
-  customer_id: string;
-  subscription_id: string | null;
-  subscription_status: string;
-  price_id: string | null;
-  current_period_start: number | null;
-  current_period_end: number | null;
-  cancel_at_period_end: boolean;
-  payment_method_brand: string | null;
-  payment_method_last4: string | null;
-}
+import { StripeUserSubscription } from '@/types/database';
 
 export function useStripeSubscription() {
   const { user, signOut } = useAuth();
-  const [subscription, setSubscription] = useState<StripeSubscription | null>(null);
+  const [subscription, setSubscription] = useState<StripeUserSubscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,7 +47,7 @@ export function useStripeSubscription() {
     fetchSubscription();
   }, [user, signOut]);
 
-  const hasActiveSubscription = subscription?.subscription_status === 'active';
+  const hasActiveSubscription = subscription?.subscription_status === 'active' || subscription?.subscription_status === 'trialing';
 
   const getPlanName = () => {
     if (!subscription?.price_id) {
