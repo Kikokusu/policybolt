@@ -153,7 +153,7 @@ export function SettingsPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Price</span>
                   <span className="text-sm">
-                    {subscription?.price_id === 'price_1QdVJhP5YugoWJkOmCqGJhpF' ? '£29' : '£79'}/month
+                    {subscription?.price_id === 'price_1RddANKSNriwT6N669BShQb0' ? '£29' : '£79'}/month
                   </span>
                 </div>
                 {isTrialing && subscription?.current_period_end && (

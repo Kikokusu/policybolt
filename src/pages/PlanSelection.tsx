@@ -24,19 +24,18 @@ const planFeatures = {
   'Solo Developer Plan': [
     '1 project/repository',
     'Auto-updating privacy policies',
-    'Basic API monitoring',
+    'Limited compliance coverage',
     'GDPR & CCPA compliance',
     'Email support',
     'GitHub integration',
   ],
   'Growing Startup': [
     'Up to 5 projects',
-    'Advanced AI monitoring',
-    'All integrations',
     'Global regulation coverage',
+    'Team collaboration tools',
+    'GitHub integration',
     'Priority support',
-    'Team collaboration',
-    'Custom templates',
+    'Auto-updating privacy policies',
   ],
 };
 

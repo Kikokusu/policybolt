@@ -58,18 +58,15 @@ export function CancellationWizard({ open, onOpenChange, onSuccess }: Cancellati
   const isActive = subscription?.subscription_status === 'active';
 
   const getOriginalPrice = () => {
-    const product = stripeProducts.find(p => p.priceId === subscription?.price_id);
-    return product?.name.includes('Solo') ? '£29' : '£79';
+    return subscription?.price_id === 'price_1RddANKSNriwT6N669BShQb0' ? '£29' : '£79';
   };
 
   const getDiscountedPrice = () => {
-    const product = stripeProducts.find(p => p.priceId === subscription?.price_id);
-    return product?.name.includes('Solo') ? '£14.50' : '£39.50';
+    return subscription?.price_id === 'price_1RddANKSNriwT6N669BShQb0' ? '£14.50' : '£39.50';
   };
 
   const getTotalSavings = () => {
-    const product = stripeProducts.find(p => p.priceId === subscription?.price_id);
-    return product?.name.includes('Solo') ? '£43.50' : '£118.50';
+    return subscription?.price_id === 'price_1RddANKSNriwT6N669BShQb0' ? '£43.50' : '£118.50';
   };
 
   const handleClose = () => {
