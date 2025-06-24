@@ -22,6 +22,16 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useStripeSubscription } from '@/hooks/useStripeSubscription';
 import { CancellationWizard } from '@/components/CancellationWizard';
+import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Info } from 'lucide-react';
 
 const todoItems = [
   {
