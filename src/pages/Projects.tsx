@@ -227,11 +227,45 @@ export function ProjectsPage() {
         // Connecting - redirect to GitHub App installation
         const config = getGitHubDevConfig();
         
-        // Store project ID in sessionStorage for callback
-        sessionStorage.setItem('github_project_id', projectId);
+        // Get the current project to check for repository name
+        const currentProject = projects.find(p => p.id === projectId);
+        const repositoryName = currentProject?.github_repository_name;
         
-        // Redirect to GitHub App installation with state parameter
-        const state = btoa(JSON.stringify({ project_id: projectId, return_url: config.callbackUrl }));
+        if (repositoryName) {
+          // Show helpful message about which repository to authorize
+          const confirmed = confirm(
+            `You're about to connect to GitHub!\n\n` +
+            `Please make sure to authorize access to this repository:\n` +
+            `📁 ${repositoryName}\n\n` +
+            `This is the repository that will be scanned for policy generation.\n\n` +
+            `Click OK to continue to GitHub, or Cancel to abort.`
+          );
+          
+          if (!confirmed) {
+            return;
+          }
+        } else {
+          // Fallback: ask for repository name if not set
+          const repoName = prompt(
+            'Enter the GitHub repository name (e.g., username/repo-name):\n\n' +
+            'This should match the repository you want to scan for policy generation.'
+          );
+          if (!repoName) {
+            throw new Error('Repository name is required');
+          }
+          repositoryName = repoName;
+        }
+        
+        // Store project ID and repository name for callback
+        sessionStorage.setItem('github_project_id', projectId);
+        sessionStorage.setItem('github_repository_name', repositoryName);
+
+        // Redirect to GitHub App installation
+        const state = btoa(JSON.stringify({ 
+          project_id: projectId, 
+          repository: repositoryName, 
+          return_url: config.callbackUrl 
+        }));
         const installUrl = `https://github.com/apps/${config.githubAppId}/installations/new?state=${encodeURIComponent(state)}`;
         window.location.href = installUrl;
       }
@@ -406,9 +440,16 @@ export function ProjectsPage() {
                     {isGitHubConnected && project.repository_url && project.repository_url.startsWith('github:installation:') && (
                       <div className="flex items-center space-x-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
                         <GitBranch className="w-4 h-4 text-green-600" />
-                        <span className="text-sm text-green-700 dark:text-green-400">
-                          GitHub App connected (Installation ID: {project.repository_url.replace('github:installation:', '')})
-                        </span>
+                        <div className="flex-1">
+                          <div className="text-sm text-green-700 dark:text-green-400">
+                            GitHub App connected
+                            {project.github_repository_name && (
+                              <span className="block text-xs text-green-600 dark:text-green-300 mt-1">
+                                📁 Repository: {project.github_repository_name}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     )}
 

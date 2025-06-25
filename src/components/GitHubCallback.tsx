@@ -55,13 +55,15 @@ export function GitHubCallback() {
           throw new Error('GitHub App installation was cancelled');
         }
 
-        // Get project_id from state parameter or sessionStorage
+        // Get project_id and repository from state parameter or sessionStorage
         let projectId: string | null = null;
+        let repositoryName: string | null = null;
         
         if (state) {
           try {
             const stateData = JSON.parse(atob(state));
             projectId = stateData.project_id;
+            repositoryName = stateData.repository;
           } catch (e) {
             console.warn('Failed to parse state parameter, falling back to sessionStorage');
           }
@@ -71,9 +73,15 @@ export function GitHubCallback() {
           projectId = sessionStorage.getItem('github_project_id');
         }
         
+        if (!repositoryName) {
+          repositoryName = sessionStorage.getItem('github_repository_name');
+        }
+        
         if (!projectId) {
           throw new Error('No project ID found in state or session');
         }
+
+        console.log('Repository to scan:', repositoryName);
 
         // Get the auth session first
         const { data: { session } } = await supabase.auth.getSession();
@@ -122,9 +130,10 @@ export function GitHubCallback() {
             .from('projects')
             .update({
               github_synced: true,
-              // Fallback: Store installation_id in repository_url temporarily
+              // Store installation_id in repository_url temporarily
               repository_url: `github:installation:${installationId}`,
-              github_repository_name: null,
+              // Store the repository name that user wants to scan
+              github_repository_name: repositoryName,
               updated_at: new Date().toISOString(),
             })
             .eq('id', projectId)
@@ -147,6 +156,7 @@ export function GitHubCallback() {
 
         // Clear sessionStorage
         sessionStorage.removeItem('github_project_id');
+        sessionStorage.removeItem('github_repository_name');
 
         setState({
           loading: false,

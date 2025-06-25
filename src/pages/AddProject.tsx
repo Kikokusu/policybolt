@@ -235,10 +235,18 @@ export function AddProjectPage() {
         customHosting: formData.customHosting,
       };
 
+      // Extract repository name from URL for easier processing
+      let repositoryName = null;
+      if (formData.connectGitHub && formData.repositoryUrl) {
+        const match = formData.repositoryUrl.match(/github\.com\/(.+?)(?:\.git)?(?:\/)?$/);
+        repositoryName = match ? match[1] : null;
+      }
+
       const { error } = await createProject({
         name: formData.projectName,
-        repository_url: formData.connectGitHub ? formData.repositoryUrl : undefined,
-        github_synced: formData.connectGitHub,
+        repository_url: formData.connectGitHub ? formData.repositoryUrl : null,
+        github_synced: false, // Will be set to true when actually connected via GitHub App
+        github_repository_name: repositoryName,
         config: projectConfig,
       });
 
