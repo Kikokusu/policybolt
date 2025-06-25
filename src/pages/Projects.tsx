@@ -332,11 +332,11 @@ export function ProjectsPage() {
               <FileText className="w-16 h-16 text-muted-foreground mb-6" />
               <h3 className="text-xl font-semibold mb-2">No projects yet</h3>
               <p className="text-muted-foreground text-center mb-6 max-w-md">
-                {hasActiveSubscription
+                {hasSubscription
                   ? "Create your first project to start generating privacy policies automatically. Connect your GitHub repository for real-time monitoring."
                   : "You need an active subscription to create and manage projects. Please upgrade your plan to continue."}
               </p>
-              {hasActiveSubscription ? (
+              {hasSubscription ? (
                 <Button asChild>
                   <RouterLink to="/dashboard/projects/new">
                     <Plus className="mr-2 w-4 h-4" />
@@ -420,8 +420,8 @@ export function ProjectsPage() {
                   </CardHeader>
 
                   <CardContent className="space-y-6">
-                    {/* Repository URL */}
-                    {isGitHubConnected && project.repository_url && !project.repository_url.startsWith('github:installation:') && (
+                    {/* Repository URL - Always show if available */}
+                    {project.repository_url && !project.repository_url.startsWith('github:installation:') && (
                       <div className="flex items-center space-x-2 p-3 bg-muted/30 rounded-lg">
                         <GitBranch className="w-4 h-4 text-muted-foreground" />
                         <a
