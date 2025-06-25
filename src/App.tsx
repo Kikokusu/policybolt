@@ -17,6 +17,8 @@ import { PoliciesPage } from '@/pages/Policies';
 import { PolicyEmbedPage } from '@/pages/PolicyEmbed';
 import { SettingsPage } from '@/pages/Settings';
 import { ProfilePage } from '@/pages/Profile';
+import { GitHubCallback } from '@/components/GitHubCallback';
+import { GitHubDebugInfo } from '@/components/GitHubDebugInfo';
 
 function App() {
   return (
@@ -43,6 +45,12 @@ function App() {
             <Route path="/dashboard/policies" element={<PoliciesPage />} />
             <Route path="/dashboard/settings" element={<SettingsPage />} />
             <Route path="/dashboard/profile" element={<ProfilePage />} />
+            
+            {/* GitHub callback route */}
+            <Route path="/github/callback" element={<GitHubCallback />} />
+            
+            {/* Debug route for development */}
+            <Route path="/debug/github" element={<GitHubDebugInfo />} />
             
             {/* Embed routes - no authentication required */}
             <Route path="/embed/policy/:policyId" element={<PolicyEmbedPage />} />

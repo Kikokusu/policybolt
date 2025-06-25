@@ -54,6 +54,7 @@ export interface Project {
   repository_url: string | null;
   status: 'active' | 'inactive' | 'error';
   github_synced: boolean;
+  github_installation_id: string | null;
   config: any | null;
   last_scan_at: string | null;
   created_at: string;
