@@ -151,8 +151,8 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: Deno.env.get('FROM_EMAIL') || 'noreply@policybolt.com',
-        to: (Deno.env.get('TO_EMAILS') || 'support@policybolt.com').split(','),
+        from: Deno.env.get('FROM_EMAIL') || 'noreply@policybolt.vcorrea.com',
+        to: (Deno.env.get('TO_EMAILS') || 'support@policybolt.vcorrea.com').split(','),
         subject: emailSubject,
         html: emailHtml,
         reply_to: email,
