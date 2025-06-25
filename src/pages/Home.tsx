@@ -109,6 +109,26 @@ const pricingPlans = [
     popular: true,
     icon: Zap,
   },
+  {
+    name: 'Enterprise',
+    description: 'For large organizations with complex needs',
+    price: 'Custom',
+    period: 'pricing',
+    badge: null,
+    features: [
+      'Unlimited projects',
+      'Custom compliance frameworks',
+      'Dedicated account manager',
+      'Advanced team management',
+      'Custom integrations',
+      'SLA guarantees',
+      'On-premise deployment options',
+      'Advanced analytics & reporting',
+    ],
+    cta: "Let's Talk",
+    popular: false,
+    icon: Shield,
+  },
 ];
 
 export function HomePage() {
@@ -329,6 +349,11 @@ export function HomePage() {
                         <span className="text-4xl font-bold">{plan.price}</span>
                         <span className="text-muted-foreground ml-1">/{plan.period}</span>
                       </div>
+                      {plan.name !== 'Enterprise' && (
+                        <p className="text-sm text-muted-foreground mt-2">
+                          14-day free trial included
+                        </p>
+                      )}
                     </div>
                   </CardHeader>
                   
@@ -340,7 +365,7 @@ export function HomePage() {
                       variant={plan.popular ? 'default' : 'outline'}
                       asChild
                     >
-                      <Link to={plan.name === 'Enterprise' ? '/contact' : '/auth/signup'}>
+                      <Link to={plan.cta === "Let's Talk" ? '/contact' : '/auth/signup'}>
                         {plan.cta}
                       </Link>
                     </Button>
