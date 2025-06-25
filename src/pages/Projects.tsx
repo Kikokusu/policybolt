@@ -214,7 +214,8 @@ export function ProjectsPage() {
         // For now, we'll just clear it since we don't store the original URL separately
         const { error } = await updateProject(projectId, {
           github_synced: false,
-          repository_url: null,
+          github_installation_id: null,
+          github_repository_name: null,
         });
 
         if (error) {
@@ -229,8 +230,13 @@ export function ProjectsPage() {
         // Get the current project and extract repository name from URL
         const currentProject = projects.find(p => p.id === projectId);
         
-        if (!currentProject?.repository_url) {
-          throw new Error('No repository URL found for this project');
+        if (!currentProject) {
+          throw new Error('Project not found');
+        }
+        
+        // Check if repository_url exists and is a GitHub URL
+        if (!currentProject.repository_url) {
+          throw new Error('No GitHub repository URL found for this project. Please check your project configuration.');
         }
         
         // Extract repository name from repository_url (e.g., "correadevuk/policybolt")
@@ -352,10 +358,8 @@ export function ProjectsPage() {
               const AIIcon = getAIIcon(config.aiUsage);
               const isDeleting = deletingProjectId === project.id;
               const isUpdating = updatingProjectId === project.id;
-              // Check if GitHub is connected by looking at the repository_url pattern
-              const isGitHubConnected = project.github_synced && 
-                project.repository_url && 
-                project.repository_url.startsWith('github:installation:');
+              // Check if GitHub is connected by looking at github_installation_id
+              const isGitHubConnected = project.github_synced && project.github_installation_id;
 
               return (
                 <Card
@@ -410,7 +414,7 @@ export function ProjectsPage() {
 
                   <CardContent className="space-y-6">
                     {/* Repository URL - Always show if available */}
-                    {project.repository_url && !project.repository_url.startsWith('github:installation:') && (
+                    {project.repository_url && (
                       <div className="flex items-center space-x-2 p-3 bg-muted/30 rounded-lg">
                         <GitBranch className="w-4 h-4 text-muted-foreground" />
                         <a
@@ -426,15 +430,22 @@ export function ProjectsPage() {
                     )}
 
                     {/* GitHub Installation Info */}
-                    {isGitHubConnected && project.repository_url && project.repository_url.startsWith('github:installation:') && (
+                    {isGitHubConnected && (
                       <div className="flex items-center space-x-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
                         <GitBranch className="w-4 h-4 text-green-600" />
                         <div className="flex-1">
                           <div className="text-sm text-green-700 dark:text-green-400">
                             GitHub App connected
-                            <span className="block text-xs text-green-600 dark:text-green-300 mt-1">
-                              📁 Installation ID: {project.repository_url.replace('github:installation:', '')}
-                            </span>
+                            {project.github_repository_name && (
+                              <span className="block text-xs text-green-600 dark:text-green-300 mt-1">
+                                📁 Repository: {project.github_repository_name}
+                              </span>
+                            )}
+                            {project.github_installation_id && (
+                              <span className="block text-xs text-green-600 dark:text-green-300 mt-1">
+                                🔗 Installation ID: {project.github_installation_id}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>

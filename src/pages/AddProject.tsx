@@ -272,6 +272,7 @@ export function AddProjectPage() {
         name: formData.projectName,
         repository_url: formData.repositoryUrl, // Always save the repository URL
         github_synced: false, // Will be set to true when actually connected via GitHub App
+        github_installation_id: null,
         github_repository_name: repositoryName,
         config: projectConfig,
       });
