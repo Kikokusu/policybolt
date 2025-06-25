@@ -406,7 +406,7 @@ export function HomePage() {
                     <ArrowRight className="ml-2 w-5 h-5" />
                   </Link>
                 </Button>
-                <Button size="lg" variant="outline" asChild className="text-lg px-8 border-white/20 text-black hover:bg-white/10 hover:text-black">
+                <Button size="lg" variant="outline" asChild className="text-lg px-8 border-white/20 text-black dark:text-white hover:bg-white/10 hover:text-black dark:hover:text-white">
                   <Link to="/contact">Talk to Founder</Link>
                 </Button>
               </div>
