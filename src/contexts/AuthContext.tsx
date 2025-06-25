@@ -20,7 +20,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      // Handle invalid refresh token error by clearing the session
+      if (error && error.message === 'Invalid Refresh Token: Refresh Token Not Found') {
+        supabase.auth.signOut()
+        setSession(null)
+        setUser(null)
+        setLoading(false)
+        return
+      }
+      
       setSession(session)
       setUser(session?.user ?? null)
       setLoading(false)
