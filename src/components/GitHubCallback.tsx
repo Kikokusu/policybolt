@@ -27,14 +27,27 @@ export function GitHubCallback() {
 
     const handleCallback = async () => {
       try {
+        // Debug: Log the current URL and all parameters
+        console.log('Current URL:', window.location.href);
+        console.log('Search params:', window.location.search);
+        
         // Extract parameters from URL
         const installationId = searchParams.get('installation_id');
         const code = searchParams.get('code');
         const setupAction = searchParams.get('setup_action');
         const state = searchParams.get('state');
         
+        console.log('Extracted parameters:', {
+          installationId,
+          code,
+          setupAction,
+          state,
+        });
+        
         // GitHub sends different parameters based on OAuth settings
         if (!installationId && !code) {
+          console.error('Missing required parameters. Available search params:', 
+            Array.from(searchParams.entries()));
           throw new Error('No installation ID or authorization code found in callback URL');
         }
 
