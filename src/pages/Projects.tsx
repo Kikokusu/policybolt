@@ -231,29 +231,8 @@ export function ProjectsPage() {
         const currentProject = projects.find(p => p.id === projectId);
         const repositoryName = currentProject?.github_repository_name;
         
-        if (repositoryName) {
-          // Show helpful message about which repository to authorize
-          const confirmed = confirm(
-            `You're about to connect to GitHub!\n\n` +
-            `Please make sure to authorize access to this repository:\n` +
-            `📁 ${repositoryName}\n\n` +
-            `This is the repository that will be scanned for policy generation.\n\n` +
-            `Click OK to continue to GitHub, or Cancel to abort.`
-          );
-          
-          if (!confirmed) {
-            return;
-          }
-        } else {
-          // Fallback: ask for repository name if not set
-          const repoName = prompt(
-            'Enter the GitHub repository name (e.g., username/repo-name):\n\n' +
-            'This should match the repository you want to scan for policy generation.'
-          );
-          if (!repoName) {
-            throw new Error('Repository name is required');
-          }
-          repositoryName = repoName;
+        if (!repositoryName) {
+          throw new Error('Repository information not found for this project');
         }
         
         // Store project ID and repository name for callback
