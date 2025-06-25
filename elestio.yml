@@ -1,0 +1,27 @@
+config:
+  runTime: 'NodeJs'          # must match the drop-down
+  version: '20'              # see §1
+  framework: 'React'
+  # install / build / start
+  installCommand: 'npm ci'   # faster & reproducible
+  buildCommand: 'npm run build'  # calls vite build
+  buildDir: 'dist'           # Vite’s default output
+  runCommand: 'npm run preview -- --port 4173 --host' # serve built files
+  icon: 'src/assets/logo.svg'
+  screenshot: 'docs/screenshot.png'
+
+ports:
+  - protocol: 'HTTPS'
+    targetProtocol: 'HTTP'
+    listeningPort: '443'     # public
+    targetPort: '4173'       # vite preview port
+    targetIP: '127.0.0.1'
+    public: true
+    path: '/'
+    isAuth: false
+
+environments:                # put secrets in the UI, not in VCS
+  - key: 'NODE_ENV'
+    value: 'production'
+  # - key: 'VITE_SUPABASE_URL'
+  #   value: '${{ vault.VITE_SUPABASE_URL }}'
