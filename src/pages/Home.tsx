@@ -176,9 +176,6 @@ export function HomePage() {
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" asChild className="text-lg px-8">
-                <Link to="/demo">Watch Demo</Link>
-              </Button>
             </div>
           </div>
         </div>
