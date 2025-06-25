@@ -15,11 +15,12 @@ const githubClientSecret = Deno.env.get('GITHUB_CLIENT_SECRET');
 function corsResponse(body: string | object | null, status = 200) {
   const headers = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS, GET',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-requested-with',
+    'Access-Control-Max-Age': '86400',
   };
 
-  if (status === 204) {
+  if (status === 204 || body === null) {
     return new Response(null, { status, headers });
   }
 
@@ -99,10 +100,25 @@ async function generateJWT() {
 }
 
 Deno.serve(async (req) => {
+  // Handle CORS preflight first, before any try/catch
+  if (req.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS, GET',
+        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-requested-with',
+        'Access-Control-Max-Age': '86400',
+      },
+    });
+  }
+
   try {
-    if (req.method === 'OPTIONS') {
-      return corsResponse({}, 204);
-    }
+    console.log('GitHub callback handler called:', {
+      method: req.method,
+      url: req.url,
+      headers: Object.fromEntries(req.headers.entries()),
+    });
 
     if (req.method !== 'POST') {
       return corsResponse({ error: 'Method not allowed' }, 405);

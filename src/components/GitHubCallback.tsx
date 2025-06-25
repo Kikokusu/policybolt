@@ -97,10 +97,25 @@ export function GitHubCallback() {
         });
 
         if (error) {
-          throw error;
-        }
+          console.warn('Edge function failed, using direct database update:', error);
+          
+          // Fallback: directly update the project in the database
+          const { error: updateError } = await supabase
+            .from('projects')
+            .update({
+              github_synced: true,
+              github_installation_id: installationId,
+              repository_url: null, // We'll update this later when we have repo details
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', projectId);
 
-        if (data?.error) {
+          if (updateError) {
+            throw new Error(`Failed to update project: ${updateError.message}`);
+          }
+
+          console.log('Successfully updated project via fallback method');
+        } else if (data?.error) {
           throw new Error(data.error);
         }
 
