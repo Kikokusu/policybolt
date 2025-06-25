@@ -11,7 +11,7 @@ config:
 
   # Honour PORT injected by Elestio (defaults to 3000) but use 4173 locally
   runCommand: >
-    PORT=${PORT:-3000}
+    PORT=${PORT:-3008}
     npm run preview -- --port ${PORT} --host 0.0.0.0
 
   # (Optional) dashboard eye-candy
@@ -23,7 +23,7 @@ ports:
   - protocol:       'HTTPS'
     targetProtocol: 'HTTP'
     listeningPort:  '443'          # public TLS
-    targetPort:     '3000'         # <-- Elestio default $PORT
+    targetPort:     '3008'         # <-- Elestio default $PORT
     targetIP:       '172.17.0.1'   # stay on bridge gateway
     public:         true
     path: '/'
