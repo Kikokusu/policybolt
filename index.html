@@ -6,6 +6,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PolicyBolt - AI-Powered Policy Management</title>
     <meta name="description" content="Streamline your policy management with AI-powered automation and insights." />
+    <script>
+      // Prevent dark mode flicker by applying theme before page renders
+      (function() {
+        try {
+          var theme = localStorage.getItem('theme');
+          var systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          
+          if (theme === 'dark' || (theme === 'system' && systemPrefersDark) || (!theme && systemPrefersDark)) {
+            document.documentElement.classList.add('dark');
+            document.documentElement.style.colorScheme = 'dark';
+          } else {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.style.colorScheme = 'light';
+          }
+        } catch (e) {
+          // Fallback to light mode if there's any error
+          console.warn('Theme initialization error:', e);
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
