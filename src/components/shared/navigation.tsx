@@ -70,6 +70,12 @@ export function Navigation({ isAuthenticated: propIsAuthenticated, user: propUse
 
   const handleNavClick = (href: string) => {
     if (href.startsWith('#')) {
+      // If we're not on the home page, navigate to home first
+      if (pathname !== '/') {
+        window.location.href = '/' + href;
+        return;
+      }
+      
       const element = document.querySelector(href);
       if (element) {
         element.scrollIntoView({ behavior: 'smooth' });
