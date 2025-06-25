@@ -47,6 +47,17 @@ export interface StripeUserSubscription {
   payment_method_last4: string | null;
 }
 
+export interface GitHubInstallation {
+  id: number;
+  installation_id: number;
+  account_id: number;
+  account_login: string;
+  account_type: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Project {
   id: string;
   user_id: string;
@@ -54,7 +65,8 @@ export interface Project {
   repository_url: string | null;
   status: 'active' | 'inactive' | 'error';
   github_synced: boolean;
-  github_installation_id: string | null;
+  github_installation_id: number | null;
+  github_repository_name: string | null;
   config: any | null;
   last_scan_at: string | null;
   created_at: string;
@@ -103,6 +115,11 @@ export interface Database {
         Row: StripeSubscription;
         Insert: Omit<StripeSubscription, 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<Omit<StripeSubscription, 'id' | 'created_at' | 'updated_at'>>;
+      };
+      github_installations: {
+        Row: GitHubInstallation;
+        Insert: Omit<GitHubInstallation, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<GitHubInstallation, 'id' | 'created_at' | 'updated_at'>>;
       };
       projects: {
         Row: Project;

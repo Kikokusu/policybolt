@@ -214,6 +214,7 @@ export function ProjectsPage() {
         const { error } = await updateProject(projectId, {
           github_synced: false,
           github_installation_id: null,
+          github_repository_name: null,
           repository_url: null,
         });
 
@@ -326,7 +327,9 @@ export function ProjectsPage() {
               const AIIcon = getAIIcon(config.aiUsage);
               const isDeleting = deletingProjectId === project.id;
               const isUpdating = updatingProjectId === project.id;
-              // Check if GitHub is connected (handle temporary storage in repository_url)
+              // Check if GitHub is connected 
+              // - Proper way: github_installation_id is a foreign key to installations table
+              // - Fallback way: installation ID stored temporarily in repository_url
               const hasInstallationId = project.github_installation_id || 
                 (project.repository_url && project.repository_url.startsWith('github:installation:'));
               const isGitHubConnected = project.github_synced && hasInstallationId;

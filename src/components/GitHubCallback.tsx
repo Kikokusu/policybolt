@@ -75,57 +75,38 @@ export function GitHubCallback() {
           throw new Error('No project ID found in state or session');
         }
 
-        // Call the Supabase edge function
-        const config = getGitHubDevConfig();
-
-        // Get the auth token
+        // Update the project directly in the database
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
           throw new Error('No authentication session found');
         }
 
-        const { data, error } = await supabase.functions.invoke('github-callback-handler', {
-          body: {
-            installation_id: installationId,
-            code: code,
-            project_id: projectId,
-            setup_action: setupAction,
-          },
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-          },
+        console.log('Updating project with GitHub installation:', {
+          projectId,
+          installationId,
+          userId: session.user.id,
         });
+        
+        const { error: updateError, data: updateData } = await supabase
+          .from('projects')
+          .update({
+            github_synced: true,
+            // Fallback: Store installation_id in repository_url temporarily
+            // The edge function should create proper foreign key relationships
+            repository_url: `github:installation:${installationId}`,
+            github_repository_name: null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', projectId)
+          .select();
 
-        if (error) {
-          console.warn('Edge function failed, using direct database update:', error);
-          console.log('Fallback update parameters:', {
-            projectId,
-            installationId,
-            userId: session.user.id,
-          });
-          
-          // Fallback: directly update the project in the database
-          const { error: updateError, data: updateData } = await supabase
-            .from('projects')
-            .update({
-              github_synced: true,
-              // Temporarily store installation_id in repository_url until we fix the schema
-              repository_url: `github:installation:${installationId}`,
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', projectId)
-            .select();
+        console.log('Update result:', { updateError, updateData });
 
-          console.log('Update result:', { updateError, updateData });
-
-          if (updateError) {
-            throw new Error(`Failed to update project: ${updateError.message}`);
-          }
-
-          console.log('✅ Successfully updated project via fallback method');
-        } else if (data?.error) {
-          throw new Error(data.error);
+        if (updateError) {
+          throw new Error(`Failed to update project: ${updateError.message}`);
         }
+
+        console.log('✅ Successfully connected GitHub App to project');
 
         // Clear sessionStorage
         sessionStorage.removeItem('github_project_id');

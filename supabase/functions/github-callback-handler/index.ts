@@ -219,68 +219,78 @@ Deno.serve(async (req) => {
     }
 
     try {
-      // Get repositories from the installation
-      const repositories = await getInstallationRepositories(actualInstallationId);
-      
-      // For simplicity, we'll use the first repository
-      // In production, you might want to let the user choose
-      const repository = repositories[0];
-      
-      if (!repository) {
-        throw new Error('No repositories found in installation');
+      // First, get installation details from GitHub API (simplified for now)
+      let installationData = {
+        account_id: 0,
+        account_login: 'unknown',
+        account_type: 'User'
+      };
+
+      try {
+        // In a real implementation, you'd fetch this from GitHub API
+        // For now, we'll use placeholder data
+        console.log('Would fetch installation details from GitHub API for:', actualInstallationId);
+      } catch (apiError) {
+        console.warn('Could not fetch installation details from GitHub API:', apiError);
       }
 
-      // Update the project with GitHub integration details
+      // Insert or update the github_installations table
+      const { data: installationRecord, error: installationError } = await supabase
+        .from('github_installations')
+        .upsert({
+          installation_id: parseInt(actualInstallationId),
+          account_id: installationData.account_id,
+          account_login: installationData.account_login,
+          account_type: installationData.account_type,
+          status: 'active',
+          updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'installation_id',
+          ignoreDuplicates: false
+        })
+        .select()
+        .single();
+
+      if (installationError) {
+        console.error('Error upserting installation:', installationError);
+        throw installationError;
+      }
+
+      console.log('Upserted installation record:', installationRecord);
+
+      // Update the project with the foreign key reference
       const { error: updateError } = await supabase
         .from('projects')
         .update({
           github_synced: true,
-          github_installation_id: actualInstallationId,
-          repository_url: repository.html_url,
+          github_installation_id: installationRecord.id,
+          repository_url: null, // Will be set later by n8n after scanning
+          github_repository_name: null, // Will be set later by n8n
           updated_at: new Date().toISOString(),
         })
         .eq('id', project_id)
         .eq('user_id', user.id);
 
       if (updateError) {
+        console.error('Error updating project:', updateError);
         throw updateError;
       }
+
+      console.log('Successfully updated project with installation reference');
 
       return corsResponse({
         success: true,
         message: 'GitHub integration configured successfully',
-        repository: {
-          name: repository.name,
-          full_name: repository.full_name,
-          url: repository.html_url,
+        installation: {
+          id: installationRecord.id,
+          installation_id: actualInstallationId,
+          account_login: installationData.account_login,
         },
       });
 
     } catch (error: any) {
       console.error('Error setting up GitHub integration:', error);
-      
-      // For development/testing purposes, we'll still update the project
-      // but without the repository details
-      const { error: fallbackUpdateError } = await supabase
-        .from('projects')
-        .update({
-          github_synced: true,
-          github_installation_id: actualInstallationId,
-          repository_url: null, // We couldn't fetch the repo details
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', project_id)
-        .eq('user_id', user.id);
-
-      if (fallbackUpdateError) {
-        throw fallbackUpdateError;
-      }
-
-      return corsResponse({
-        success: true,
-        message: 'GitHub integration configured (repository details unavailable)',
-        warning: 'Could not fetch repository details - this is expected in development',
-      });
+      throw error; // Let the outer catch handle this
     }
 
   } catch (error: any) {
