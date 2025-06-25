@@ -11,7 +11,7 @@ config:
 
   # Honour PORT injected by Elestio (defaults to 3000) but use 4173 locally
   runCommand: >
-    PORT=${PORT:-4173}
+    PORT=${PORT:-3000}
     npm run preview -- --port ${PORT} --host 0.0.0.0
 
   # (Optional) dashboard eye-candy
