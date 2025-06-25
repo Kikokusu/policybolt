@@ -98,9 +98,14 @@ export function GitHubCallback() {
 
         if (error) {
           console.warn('Edge function failed, using direct database update:', error);
+          console.log('Fallback update parameters:', {
+            projectId,
+            installationId,
+            userId: session.user.id,
+          });
           
           // Fallback: directly update the project in the database
-          const { error: updateError } = await supabase
+          const { error: updateError, data: updateData } = await supabase
             .from('projects')
             .update({
               github_synced: true,
@@ -108,13 +113,16 @@ export function GitHubCallback() {
               repository_url: `github:installation:${installationId}`,
               updated_at: new Date().toISOString(),
             })
-            .eq('id', projectId);
+            .eq('id', projectId)
+            .select();
+
+          console.log('Update result:', { updateError, updateData });
 
           if (updateError) {
             throw new Error(`Failed to update project: ${updateError.message}`);
           }
 
-          console.log('Successfully updated project via fallback method');
+          console.log('✅ Successfully updated project via fallback method');
         } else if (data?.error) {
           throw new Error(data.error);
         }

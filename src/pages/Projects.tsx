@@ -326,7 +326,10 @@ export function ProjectsPage() {
               const AIIcon = getAIIcon(config.aiUsage);
               const isDeleting = deletingProjectId === project.id;
               const isUpdating = updatingProjectId === project.id;
-              const isGitHubConnected = project.github_synced && project.github_installation_id;
+              // Check if GitHub is connected (handle temporary storage in repository_url)
+              const hasInstallationId = project.github_installation_id || 
+                (project.repository_url && project.repository_url.startsWith('github:installation:'));
+              const isGitHubConnected = project.github_synced && hasInstallationId;
 
               return (
                 <Card
@@ -381,7 +384,7 @@ export function ProjectsPage() {
 
                   <CardContent className="space-y-6">
                     {/* Repository URL */}
-                    {isGitHubConnected && project.repository_url && (
+                    {isGitHubConnected && project.repository_url && !project.repository_url.startsWith('github:installation:') && (
                       <div className="flex items-center space-x-2 p-3 bg-muted/30 rounded-lg">
                         <GitBranch className="w-4 h-4 text-muted-foreground" />
                         <a
@@ -393,6 +396,16 @@ export function ProjectsPage() {
                           {project.repository_url}
                         </a>
                         <ExternalLink className="w-3 h-3 text-muted-foreground" />
+                      </div>
+                    )}
+
+                    {/* GitHub Installation Info */}
+                    {isGitHubConnected && project.repository_url && project.repository_url.startsWith('github:installation:') && (
+                      <div className="flex items-center space-x-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                        <GitBranch className="w-4 h-4 text-green-600" />
+                        <span className="text-sm text-green-700 dark:text-green-400">
+                          GitHub App connected (Installation ID: {project.repository_url.replace('github:installation:', '')})
+                        </span>
                       </div>
                     )}
 

@@ -124,9 +124,13 @@ Deno.serve(async (req) => {
       return corsResponse({ error: 'Method not allowed' }, 405);
     }
 
-    const { installation_id, code, project_id, setup_action } = await req.json();
+    const body = await req.json();
+    console.log('Request body:', body);
+    
+    const { installation_id, code, project_id, setup_action } = body;
 
     if ((!installation_id && !code) || !project_id) {
+      console.error('Missing required parameters:', { installation_id, code, project_id });
       return corsResponse({ 
         error: 'Missing installation_id/code or project_id' 
       }, 400);
@@ -281,6 +285,12 @@ Deno.serve(async (req) => {
 
   } catch (error: any) {
     console.error('GitHub callback handler error:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      cause: error.cause,
+    });
     return corsResponse({ 
       error: error.message || 'Internal server error' 
     }, 500);
