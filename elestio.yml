@@ -1,32 +1,36 @@
 config:
-  # ───── Runtime / framework ─────
+  # ── runtime & framework ────────────────────────────────────────────
   runTime:    'NodeJs'
-  version:    '20'          # current LTS, satisfies Vite ≥5
+  version:    '20'          # Node 20 LTS – Vite ≥5 compliant
   framework:  'React'
 
-  # ───── CI steps ─────
-  installCommand: 'npm ci'            # deterministic install
-  buildCommand:   'npm run build'     # vite build → dist/
+  # ── install / build / run ──────────────────────────────────────────
+  installCommand: 'npm ci'          # reproducible install
+  buildCommand:   'npm run build'   # vite build -> dist/
   buildDir:       'dist'
 
-  # Bind to all interfaces and honour $PORT when Elestio injects it
-  runCommand: 'PORT=${PORT:-4173} npm run preview -- --port ${PORT:-4173} --host 0.0.0.0'
+  # Honour PORT injected by Elestio (defaults to 3000) but use 4173 locally
+  runCommand: >
+    PORT=${PORT:-4173}
+    npm run preview -- --port ${PORT} --host 0.0.0.0
 
-  # ───── Optional dashboard metadata ─────
+  # (Optional) dashboard eye-candy
   icon:       'src/assets/logo.svg'
   screenshot: 'docs/screenshot.png'
 
+# ── reverse-proxy mapping ────────────────────────────────────────────
 ports:
-  - protocol:        'HTTPS'
-    targetProtocol:  'HTTP'
-    listeningPort:   '443'            # public TLS port
-    targetPort:      '4173'           # internal Vite preview port
-    targetIP:        '0.0.0.0'        # listen on all interfaces
-    public:          true
+  - protocol:       'HTTPS'
+    targetProtocol: 'HTTP'
+    listeningPort:  '443'          # public TLS
+    targetPort:     '3000'         # <-- Elestio default $PORT
+    targetIP:       '172.17.0.1'   # stay on bridge gateway
+    public:         true
     path: '/'
-    isAuth:          false
+    isAuth:         false
 
-environments:                        # keep secrets out of VCS
+# ── environment variables (add secrets in UI, not here) ──────────────
+environments:
   - key:   'NODE_ENV'
     value: 'production'
   # - key: 'VITE_SUPABASE_URL'
