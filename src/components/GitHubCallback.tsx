@@ -27,13 +27,15 @@ export function GitHubCallback() {
 
     const handleCallback = async () => {
       try {
-        // Extract installation_id from URL parameters
+        // Extract parameters from URL
         const installationId = searchParams.get('installation_id');
+        const code = searchParams.get('code');
         const setupAction = searchParams.get('setup_action');
         const state = searchParams.get('state');
         
-        if (!installationId) {
-          throw new Error('No installation ID found in callback URL');
+        // GitHub sends different parameters based on OAuth settings
+        if (!installationId && !code) {
+          throw new Error('No installation ID or authorization code found in callback URL');
         }
 
         if (setupAction === 'cancelled') {
@@ -72,7 +74,9 @@ export function GitHubCallback() {
         const { data, error } = await supabase.functions.invoke('github-callback-handler', {
           body: {
             installation_id: installationId,
+            code: code,
             project_id: projectId,
+            setup_action: setupAction,
           },
           headers: {
             'Authorization': `Bearer ${session.access_token}`,

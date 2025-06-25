@@ -108,12 +108,66 @@ Deno.serve(async (req) => {
       return corsResponse({ error: 'Method not allowed' }, 405);
     }
 
-    const { installation_id, project_id } = await req.json();
+    const { installation_id, code, project_id, setup_action } = await req.json();
 
-    if (!installation_id || !project_id) {
+    if ((!installation_id && !code) || !project_id) {
       return corsResponse({ 
-        error: 'Missing installation_id or project_id' 
+        error: 'Missing installation_id/code or project_id' 
       }, 400);
+    }
+
+    // If we have a code but no installation_id, we need to exchange the code
+    let actualInstallationId = installation_id;
+    if (code && !installation_id) {
+      try {
+        // Exchange code for access token and get installation details
+        const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            client_id: githubClientId,
+            client_secret: githubClientSecret,
+            code: code,
+          }),
+        });
+
+        if (!tokenResponse.ok) {
+          throw new Error('Failed to exchange code for token');
+        }
+
+        const tokenData = await tokenResponse.json();
+        
+        // Get user installations to find the installation_id
+        const installationsResponse = await fetch('https://api.github.com/user/installations', {
+          headers: {
+            'Authorization': `token ${tokenData.access_token}`,
+            'Accept': 'application/vnd.github.v3+json',
+          },
+        });
+
+        if (!installationsResponse.ok) {
+          throw new Error('Failed to get user installations');
+        }
+
+        const installationsData = await installationsResponse.json();
+        
+        // For simplicity, use the most recent installation
+        // In production, you might want to match by repository or other criteria
+        if (installationsData.installations && installationsData.installations.length > 0) {
+          actualInstallationId = installationsData.installations[0].id.toString();
+        } else {
+          throw new Error('No installations found for user');
+        }
+      } catch (error) {
+        console.error('Error processing OAuth code:', error);
+        // Continue with the installation_id if we have it from the URL
+        if (!installation_id) {
+          throw error;
+        }
+      }
     }
 
     // Get the authenticated user
@@ -146,7 +200,7 @@ Deno.serve(async (req) => {
 
     try {
       // Get repositories from the installation
-      const repositories = await getInstallationRepositories(installation_id);
+      const repositories = await getInstallationRepositories(actualInstallationId);
       
       // For simplicity, we'll use the first repository
       // In production, you might want to let the user choose
@@ -161,7 +215,7 @@ Deno.serve(async (req) => {
         .from('projects')
         .update({
           github_synced: true,
-          github_installation_id: installation_id,
+          github_installation_id: actualInstallationId,
           repository_url: repository.html_url,
           updated_at: new Date().toISOString(),
         })
@@ -191,7 +245,7 @@ Deno.serve(async (req) => {
         .from('projects')
         .update({
           github_synced: true,
-          github_installation_id: installation_id,
+          github_installation_id: actualInstallationId,
           repository_url: null, // We couldn't fetch the repo details
           updated_at: new Date().toISOString(),
         })
