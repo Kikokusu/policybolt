@@ -210,11 +210,10 @@ export function ProjectsPage() {
 
     try {
       if (currentlyConnected) {
-        // Disconnecting - clear GitHub data
+        // Disconnecting - clear GitHub data and restore original repository URL
+        // For now, we'll just clear it since we don't store the original URL separately
         const { error } = await updateProject(projectId, {
           github_synced: false,
-          github_installation_id: null,
-          github_repository_name: null,
           repository_url: null,
         });
 
@@ -227,12 +226,25 @@ export function ProjectsPage() {
         // Connecting - redirect to GitHub App installation
         const config = getGitHubDevConfig();
         
-        // Get the current project to check for repository name
+        // Get the current project and extract repository name from URL
         const currentProject = projects.find(p => p.id === projectId);
-        const repositoryName = currentProject?.github_repository_name;
+        
+        if (!currentProject?.repository_url) {
+          throw new Error('No repository URL found for this project');
+        }
+        
+        // Extract repository name from repository_url (e.g., "correadevuk/policybolt")
+        const match = currentProject.repository_url.match(/github\.com\/(.+?)(?:\.git)?(?:\/)?$/);
+        const repositoryName = match ? match[1] : null;
+        
+        console.log('Debug - Project data:', {
+          projectId,
+          repository_url: currentProject.repository_url,
+          extractedRepositoryName: repositoryName
+        });
         
         if (!repositoryName) {
-          throw new Error('Repository information not found for this project');
+          throw new Error('Could not extract repository name from URL: ' + currentProject.repository_url);
         }
         
         // Store project ID and repository name for callback
@@ -340,12 +352,10 @@ export function ProjectsPage() {
               const AIIcon = getAIIcon(config.aiUsage);
               const isDeleting = deletingProjectId === project.id;
               const isUpdating = updatingProjectId === project.id;
-              // Check if GitHub is connected 
-              // - Proper way: github_installation_id is a foreign key to installations table
-              // - Fallback way: installation ID stored temporarily in repository_url
-              const hasInstallationId = project.github_installation_id || 
-                (project.repository_url && project.repository_url.startsWith('github:installation:'));
-              const isGitHubConnected = project.github_synced && hasInstallationId;
+              // Check if GitHub is connected by looking at the repository_url pattern
+              const isGitHubConnected = project.github_synced && 
+                project.repository_url && 
+                project.repository_url.startsWith('github:installation:');
 
               return (
                 <Card
@@ -422,11 +432,9 @@ export function ProjectsPage() {
                         <div className="flex-1">
                           <div className="text-sm text-green-700 dark:text-green-400">
                             GitHub App connected
-                            {project.github_repository_name && (
-                              <span className="block text-xs text-green-600 dark:text-green-300 mt-1">
-                                📁 Repository: {project.github_repository_name}
-                              </span>
-                            )}
+                            <span className="block text-xs text-green-600 dark:text-green-300 mt-1">
+                              📁 Installation ID: {project.repository_url.replace('github:installation:', '')}
+                            </span>
                           </div>
                         </div>
                       </div>

@@ -130,10 +130,8 @@ export function GitHubCallback() {
             .from('projects')
             .update({
               github_synced: true,
-              // Store installation_id in repository_url temporarily
+              // Store installation_id in repository_url (overwrites the original GitHub URL)
               repository_url: `github:installation:${installationId}`,
-              // Store the repository name that user wants to scan
-              github_repository_name: repositoryName,
               updated_at: new Date().toISOString(),
             })
             .eq('id', projectId)
