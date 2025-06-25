@@ -104,8 +104,8 @@ export function GitHubCallback() {
             .from('projects')
             .update({
               github_synced: true,
-              github_installation_id: installationId,
-              repository_url: null, // We'll update this later when we have repo details
+              // Temporarily store installation_id in repository_url until we fix the schema
+              repository_url: `github:installation:${installationId}`,
               updated_at: new Date().toISOString(),
             })
             .eq('id', projectId);
