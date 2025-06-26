@@ -222,8 +222,8 @@ export function DashboardPage() {
                     <TableBody>
                       {policies
                         .sort((a, b) => {
-                          // Sort by status: pending_review first, then active, then inactive
-                          const statusOrder = { 'pending_review': 0, 'active': 1, 'inactive': 2 };
+                          // Sort by status: active first, then pending_review, then inactive
+                          const statusOrder = { 'active': 0, 'pending_review': 1, 'inactive': 2 };
                           const aOrder = statusOrder[a.status as keyof typeof statusOrder] ?? 3;
                           const bOrder = statusOrder[b.status as keyof typeof statusOrder] ?? 3;
                           

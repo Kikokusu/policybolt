@@ -48,6 +48,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useProjects } from '@/hooks/useProjects';
 import { usePolicies } from '@/hooks/usePolicies';
 import { downloadPolicyAsMarkdown, generateEmbedCode, copyToClipboard } from '@/utils/policyUtils';
+import { triggerPolicyGeneration } from '@/lib/webhook-utils';
 import { toast } from 'sonner';
 
 const getStatusColor = (status: string) => {
@@ -142,17 +143,28 @@ export function PoliciesPage() {
     setError(null);
 
     try {
-      const { error } = await syncPolicy(projectId);
+      // Find the project to sync
+      const project = projects.find(p => p.id === projectId);
       
-      if (error) {
-        throw error;
+      if (!project) {
+        throw new Error('Project not found');
       }
 
-      toast.success('New policy generated successfully');
+      if (!project.github_installation_id) {
+        throw new Error('Project must have GitHub connected to sync policy');
+      }
+
+      if (!project.config) {
+        throw new Error('Project must have configuration to sync policy');
+      }
+
+      // Use the same webhook function as Test Webhook
+      await triggerPolicyGeneration(project);
+      toast.success('Policy generation triggered successfully!');
     } catch (err: any) {
       console.error('Error syncing policy:', err);
       setError(err.message || 'Failed to generate policy');
-      toast.error('Failed to generate policy');
+      toast.error('Failed to generate policy: ' + (err.message || 'Unknown error'));
     } finally {
       setSyncingProjectId(null);
     }
