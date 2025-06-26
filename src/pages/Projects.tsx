@@ -602,8 +602,8 @@ export function ProjectsPage() {
                             : "Connect GitHub"}
                         </Button>
                         
-                        {/* Test Webhook Button - Only in Development */}
-                        {import.meta.env.DEV && isGitHubConnected && (
+                        {/* Test Webhook Button */}
+                        {isGitHubConnected && (
                           <Button
                             variant="outline"
                             size="sm"
