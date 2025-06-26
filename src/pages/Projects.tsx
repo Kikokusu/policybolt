@@ -49,6 +49,8 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useProjects } from "@/hooks/useProjects";
 import { toast } from "sonner";
 import { getGitHubDevConfig } from "@/lib/github-dev-config";
+import { triggerPolicyGeneration } from "@/lib/webhook-utils";
+import type { Project } from "@/types/database";
 
 const getPurposeIcon = (purpose: string) => {
   switch (purpose) {
@@ -166,6 +168,7 @@ export function ProjectsPage() {
   const [updatingProjectId, setUpdatingProjectId] = useState<string | null>(
     null
   );
+  const [testingWebhookId, setTestingWebhookId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -275,6 +278,30 @@ export function ProjectsPage() {
     }
   };
 
+  const handleTestWebhook = async (project: Project) => {
+    setTestingWebhookId(project.id);
+    setError(null);
+
+    try {
+      if (!project.github_installation_id) {
+        throw new Error('Project must have GitHub connected to test webhook');
+      }
+
+      if (!project.config) {
+        throw new Error('Project must have configuration to test webhook');
+      }
+
+      await triggerPolicyGeneration(project);
+      toast.success('Webhook test successful! Check your n8n workflow.');
+    } catch (err: any) {
+      console.error('Webhook test error:', err);
+      setError(err.message || 'Failed to test webhook');
+      toast.error('Webhook test failed: ' + (err.message || 'Unknown error'));
+    } finally {
+      setTestingWebhookId(null);
+    }
+  };
+
   if (authLoading || subscriptionLoading || projectsLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -358,6 +385,7 @@ export function ProjectsPage() {
               const AIIcon = getAIIcon(config.aiUsage);
               const isDeleting = deletingProjectId === project.id;
               const isUpdating = updatingProjectId === project.id;
+              const isTestingWebhook = testingWebhookId === project.id;
               // Check if GitHub is connected by looking at github_installation_id
               const isGitHubConnected = project.github_synced && project.github_installation_id;
 
@@ -572,6 +600,23 @@ export function ProjectsPage() {
                             ? "Disconnect GitHub"
                             : "Connect GitHub"}
                         </Button>
+                        
+                        {/* Test Webhook Button - Only in Development */}
+                        {import.meta.env.DEV && isGitHubConnected && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleTestWebhook(project)}
+                            disabled={isTestingWebhook}
+                          >
+                            {isTestingWebhook ? (
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            ) : (
+                              <Zap className="w-4 h-4 mr-2" />
+                            )}
+                            Test Webhook
+                          </Button>
+                        )}
                       </div>
 
                       <Dialog>

@@ -5,6 +5,7 @@ import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { getGitHubDevConfig, logGitHubDevWarnings } from "@/lib/github-dev-config";
+import { triggerPolicyGeneration } from "@/lib/webhook-utils";
 
 interface CallbackState {
   loading: boolean;
@@ -158,14 +159,35 @@ export function GitHubCallback() {
         sessionStorage.removeItem('github_project_id');
         sessionStorage.removeItem('github_repository_name');
 
+        // Trigger policy generation after successful GitHub connection
+        try {
+          // Get the updated project data to trigger webhook
+          const { data: updatedProject, error: projectError } = await supabase
+            .from('projects')
+            .select('*')
+            .eq('id', projectId)
+            .single();
+
+          if (projectError) {
+            console.warn('Could not fetch updated project for webhook:', projectError);
+          } else if (updatedProject) {
+            console.log('🚀 Triggering policy generation webhook...');
+            await triggerPolicyGeneration(updatedProject);
+            console.log('✅ Policy generation triggered successfully');
+            toast.success('GitHub connected and policy generation started!');
+          }
+        } catch (webhookError: any) {
+          console.error('Webhook trigger failed:', webhookError);
+          // Don't fail the whole process if webhook fails
+          toast.success('GitHub repository connected successfully!');
+          toast.error('Policy generation failed to start: ' + (webhookError.message || 'Unknown error'));
+        }
+
         setState({
           loading: false,
           error: null,
           success: true,
         });
-
-        // Show success toast and redirect after a brief delay
-        toast.success('GitHub repository connected successfully!');
         
         setTimeout(() => {
           navigate('/dashboard/projects');
