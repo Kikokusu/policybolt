@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Navigation } from '@/components/shared/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,6 +43,7 @@ export function SignupPage() {
   const [success, setSuccess] = useState(false);
   const [userEmail, setUserEmail] = useState<string>('');
   const { signUp } = useAuth();
+  const navigate = useNavigate();
 
   const {
     register,
@@ -75,8 +76,8 @@ export function SignupPage() {
           setError(error.message || 'An error occurred during sign up.');
         }
       } else {
-        setUserEmail(data.email);
-        setSuccess(true);
+        // Since email confirmation is disabled, redirect directly to plan selection
+        navigate('/select-plan');
       }
     } catch (err) {
       console.error('Signup error:', err);

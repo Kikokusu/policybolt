@@ -282,7 +282,7 @@ export function AddProjectPage() {
       }
 
       toast.success("Project created successfully!");
-      navigate("/dashboard");
+      navigate("/dashboard/projects");
     } catch (err: any) {
       console.error("Error creating project:", err);
       setError(err.message || "Failed to create project. Please try again.");

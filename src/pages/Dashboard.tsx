@@ -220,7 +220,22 @@ export function DashboardPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {policies.slice(0, 5).map((policy) => (
+                      {policies
+                        .sort((a, b) => {
+                          // Sort by status: pending_review first, then active, then inactive
+                          const statusOrder = { 'pending_review': 0, 'active': 1, 'inactive': 2 };
+                          const aOrder = statusOrder[a.status as keyof typeof statusOrder] ?? 3;
+                          const bOrder = statusOrder[b.status as keyof typeof statusOrder] ?? 3;
+                          
+                          if (aOrder !== bOrder) {
+                            return aOrder - bOrder;
+                          }
+                          
+                          // If same status, sort by creation date (newest first)
+                          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+                        })
+                        .slice(0, 5)
+                        .map((policy) => (
                         <TableRow key={policy.id}>
                           <TableCell className="font-medium">
                             {policy.title}
