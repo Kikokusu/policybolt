@@ -11,15 +11,22 @@ interface CallbackState {
   loading: boolean;
   error: string | null;
   success: boolean;
+  generatingPolicy: boolean;
+  policyGenerated: boolean;
+  policyError: string | null;
 }
 
 export function GitHubCallback() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const [projectId, setProjectId] = useState<string | null>(null);
   const [state, setState] = useState<CallbackState>({
     loading: true,
     error: null,
     success: false,
+    generatingPolicy: false,
+    policyGenerated: false,
+    policyError: null,
   });
 
   useEffect(() => {
@@ -159,39 +166,20 @@ export function GitHubCallback() {
         sessionStorage.removeItem('github_project_id');
         sessionStorage.removeItem('github_repository_name');
 
-        // Trigger policy generation after successful GitHub connection
-        try {
-          // Get the updated project data to trigger webhook
-          const { data: updatedProject, error: projectError } = await supabase
-            .from('projects')
-            .select('*')
-            .eq('id', projectId)
-            .single();
-
-          if (projectError) {
-            console.warn('Could not fetch updated project for webhook:', projectError);
-          } else if (updatedProject) {
-            console.log('🚀 Triggering policy generation webhook...');
-            await triggerPolicyGeneration(updatedProject);
-            console.log('✅ Policy generation triggered successfully');
-            toast.success('GitHub connected and policy generation started!');
-          }
-        } catch (webhookError: any) {
-          console.error('Webhook trigger failed:', webhookError);
-          // Don't fail the whole process if webhook fails
-          toast.success('GitHub repository connected successfully!');
-          toast.error('Policy generation failed to start: ' + (webhookError.message || 'Unknown error'));
-        }
+        // Store project ID for policy generation
+        setProjectId(projectId);
 
         setState({
           loading: false,
           error: null,
           success: true,
+          generatingPolicy: false,
+          policyGenerated: false,
+          policyError: null,
         });
-        
-        setTimeout(() => {
-          navigate('/dashboard/projects');
-        }, 2000);
+
+        // Show success toast
+        toast.success('GitHub repository connected successfully!');
 
       } catch (err: any) {
         console.error('GitHub callback error:', err);
@@ -199,6 +187,9 @@ export function GitHubCallback() {
           loading: false,
           error: err.message || 'Failed to connect GitHub repository',
           success: false,
+          generatingPolicy: false,
+          policyGenerated: false,
+          policyError: null,
         });
 
         // Clear sessionStorage on error too
@@ -215,6 +206,67 @@ export function GitHubCallback() {
 
     handleCallback();
   }, [searchParams, navigate]);
+
+  // Effect to trigger policy generation after successful GitHub connection
+  useEffect(() => {
+    if (state.success && projectId && !state.generatingPolicy && !state.policyGenerated) {
+      const generatePolicy = async () => {
+        setState(prev => ({ ...prev, generatingPolicy: true }));
+
+        try {
+          // Get the updated project data to trigger webhook
+          const { data: updatedProject, error: projectError } = await supabase
+            .from('projects')
+            .select('*')
+            .eq('id', projectId)
+            .single();
+
+          if (projectError) {
+            throw new Error('Failed to fetch project data');
+          }
+
+          if (!updatedProject) {
+            throw new Error('Project not found');
+          }
+
+          console.log('🚀 Triggering policy generation webhook...');
+          await triggerPolicyGeneration(updatedProject);
+          console.log('✅ Policy generation triggered successfully');
+
+          setState(prev => ({
+            ...prev,
+            generatingPolicy: false,
+            policyGenerated: true,
+            policyError: null,
+          }));
+
+          toast.success('Privacy policy generation started successfully!');
+
+          // Navigate to projects page after success
+          setTimeout(() => {
+            navigate('/dashboard/projects');
+          }, 2000);
+
+        } catch (error: any) {
+          console.error('Policy generation failed:', error);
+          setState(prev => ({
+            ...prev,
+            generatingPolicy: false,
+            policyError: error.message || 'Failed to start policy generation',
+          }));
+
+          toast.error('Policy generation failed: ' + (error.message || 'Unknown error'));
+
+          // Still navigate after error, but with longer delay
+          setTimeout(() => {
+            navigate('/dashboard/projects');
+          }, 3000);
+        }
+      };
+
+      generatePolicy();
+    }
+  }, [state.success, projectId, state.generatingPolicy, state.policyGenerated, navigate]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
@@ -234,7 +286,7 @@ export function GitHubCallback() {
             </>
           )}
 
-          {state.success && (
+          {state.success && !state.generatingPolicy && !state.policyGenerated && !state.policyError && (
             <>
               <div className="w-16 h-16 mx-auto">
                 <CheckCircle className="w-16 h-16 text-green-500" />
@@ -244,8 +296,63 @@ export function GitHubCallback() {
                   Connection Successful!
                 </h2>
                 <p className="text-muted-foreground">
-                  Your GitHub repository has been connected successfully. 
+                  Your GitHub repository has been connected successfully.
+                </p>
+              </div>
+            </>
+          )}
+
+          {state.generatingPolicy && (
+            <>
+              <div className="w-16 h-16 mx-auto">
+                <Loader2 className="w-16 h-16 text-primary animate-spin" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold mb-2">
+                  Generating Privacy Policy
+                </h2>
+                <p className="text-muted-foreground">
+                  Please wait while we analyze your repository and generate your first privacy policy...
+                </p>
+              </div>
+            </>
+          )}
+
+          {state.policyGenerated && (
+            <>
+              <div className="w-16 h-16 mx-auto">
+                <CheckCircle className="w-16 h-16 text-green-500" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold mb-2 text-green-600">
+                  All Set!
+                </h2>
+                <p className="text-muted-foreground">
+                  GitHub connected and privacy policy generation started successfully! 
                   Redirecting you back to your projects...
+                </p>
+              </div>
+            </>
+          )}
+
+          {state.policyError && (
+            <>
+              <div className="w-16 h-16 mx-auto">
+                <AlertCircle className="w-16 h-16 text-yellow-500" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold mb-2 text-yellow-600">
+                  GitHub Connected
+                </h2>
+                <p className="text-muted-foreground mb-4">
+                  Your GitHub repository was connected successfully, but we encountered an issue starting the policy generation.
+                </p>
+                <Alert variant="destructive" className="text-left">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{state.policyError}</AlertDescription>
+                </Alert>
+                <p className="text-muted-foreground mt-4">
+                  You can try generating the policy manually from your projects page. Redirecting you there now...
                 </p>
               </div>
             </>
