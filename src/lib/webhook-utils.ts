@@ -71,12 +71,6 @@ export async function triggerPolicyGeneration(project: Project): Promise<void> {
     throw new Error('Project does not have configuration data');
   }
 
-  // Get the webhook URL from environment
-  const webhookUrl = import.meta.env.VITE_GENERATE_POLICY_WEBHOOK_URL;
-  if (!webhookUrl) {
-    throw new Error('GENERATE_POLICY_WEBHOOK_URL environment variable is not set');
-  }
-
   // Get the current user session
   const { data: { session } } = await supabase.auth.getSession();
   if (!session?.user?.id) {
@@ -101,6 +95,12 @@ export async function triggerPolicyGeneration(project: Project): Promise<void> {
     github_repository_name: project.github_repository_name || '',
     config: project.config,
   };
+
+  // Get the webhook URL from environment
+  const webhookUrl = import.meta.env.VITE_GENERATE_POLICY_WEBHOOK_URL;
+  if (!webhookUrl) {
+    throw new Error('VITE_GENERATE_POLICY_WEBHOOK_URL environment variable is not set');
+  }
 
   // Make the webhook request
   const response = await fetch(webhookUrl, {
