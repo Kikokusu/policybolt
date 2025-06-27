@@ -300,3 +300,30 @@ The application is ready for deployment to any static hosting provider. Build wi
 ---
 
 **Note**: This is a functional MVP with core features implemented. The pending work items represent the roadmap for turning this into a complete commercial SaaS product.
+
+## 🔄 n8n Automation Workflows
+
+PolicyBolt uses three main n8n workflows to handle AI-powered policy generation and GitHub integration. These workflows are stored in the `n8n/` folder:
+
+### **`policy_scan.json`**
+Monitors GitHub repositories for changes and triggers policy updates when new commits are detected. This workflow:
+- Receives webhook notifications from GitHub
+- Fetches project data from Supabase
+- Compares commit IDs to detect new changes
+- Triggers the repository scanning workflow when changes are found
+
+### **`policy_generation.json`**
+Handles the core AI-powered privacy policy generation process. This workflow:
+- Analyzes repository code and project configuration
+- Integrates with OpenAI GPT-4o for intelligent policy generation
+- Creates comprehensive privacy policies based on detected data patterns
+- Stores generated policies in Supabase with pending review status
+
+### **`github_repo_scan.json`**
+Performs deep analysis of GitHub repositories to identify privacy-relevant code patterns. This workflow:
+- Scans repository files for API integrations and third-party services
+- Detects data collection patterns and user tracking implementations
+- Identifies compliance requirements based on geographic targeting
+- Feeds analysis results to the policy generation workflow
+
+These workflows work together to provide seamless, automated privacy policy management that keeps pace with your development workflow.
