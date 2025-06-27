@@ -6,6 +6,21 @@ AI-powered privacy policy management platform that automatically generates and m
 
 PolicyBolt is a functional SaaS application with user authentication, subscription management, project creation, and AI-powered privacy policy generation. Users can sign up, create projects, and generate privacy policies through an integrated n8n automation workflow.
 
+
+## 💪 Team
+
+### Vitor Correa
+Software developer and indie maker passionate about building tools that solve real-world problems. Based in the UK for the past 8 years, Vitor has developed mobile applications integrated with IoT devices across industries including healthcare, lighting, fire prevention and construction. Today, he’s focused on creating solutions that leverage AI and automation to simplify complex workflows and empower modern makers.
+
+At PolicyBolt, Vitor was involved in the entire development process, working closely with the team to build the solution end to end. He particularly enjoyed collaborating on the n8n workflows, where automation met creativity.
+
+### Ross Hughey
+
+### Abiola Fatunla
+
+### Paul Dohou
+
+
 ## 📋 Current Features
 
 ### ✅ **Authentication & User Management**
