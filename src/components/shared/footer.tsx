@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Shield, Twitter, Github, Linkedin } from 'lucide-react';
+import { Shield, X, Github, Linkedin } from 'lucide-react';
 
 const footerLinks = {
   product: [
@@ -16,7 +16,7 @@ const footerLinks = {
 };
 
 const socialLinks = [
-  { name: 'Twitter', href: '#', icon: Twitter },
+  { name: 'X', href: '#', icon: X },
   { name: 'GitHub', href: '#', icon: Github },
   { name: 'LinkedIn', href: '#', icon: Linkedin },
 ];
