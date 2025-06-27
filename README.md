@@ -173,9 +173,7 @@ Tracks policy update frequency per project.
 - **Cancellation Flow**: Implement cancellation with retention offers (50% discount for 3 months)
 - **Billing Dashboard**: Invoice history, payment methods, billing cycles
 
-## 🚧 Pending Work
-
-### **🔴 High Priority - GitHub Integration**
+### GitHub Integration\*\*
 
 - **GitHub OAuth/App**: Authenticate and connect repositories
 - **Webhook Setup**: Automatic webhook creation for connected repos
