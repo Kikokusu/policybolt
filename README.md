@@ -222,44 +222,7 @@ Tracks policy update frequency per project.
 - **Push Detection**: Trigger policy generation on code changes
 - **Repository Analysis**: Enhanced code scanning for privacy-relevant changes
 
-### High-level checklist for adding **GitHub-connect**
-
-1. **Create secure database objects**  
-   _Ask Bolt to generate a Supabase migration that:_  
-   • adds a `github_tokens` table (PAT encrypted per project)  
-   • creates a `project_github_status` view that only shows `is_connected`  
-   • defines two helper SQL functions: `save_github_token` and `get_github_token`  
-   _Then run_ `supabase db push`.  
-   *Why?* Provides a safe, audited home for the token and hides it from normal client queries.
-
-2. **Deploy the `github-exchange` edge function**  
-   _Have Bolt scaffold and deploy a Supabase Edge Function that:_  
-   • receives the GitHub OAuth `code` and `project_id` via POST  
-   • swaps the code for a PAT with GitHub  
-   • stores the encrypted token via `save_github_token` and returns `204`.  
-   *Why?* Keeps the OAuth secret-exchange server-side, so the browser never sees the PAT.
-
-3. **Add front-end entry points**  
-   _Create two React files:_  
-   • `ConnectGitHub.tsx` – button that starts OAuth (`scope=repo`).  
-   • `Callback.tsx` – page at `/github/callback` that validates `state`, posts to the edge function, then redirects back to the project.  
-   *Why?* Lets users authorise GitHub from the UI while keeping sensitive parts off the client.
-
-4. **Surface connection status in the UI**  
-   _Read the new `project_github_status` view to show “Connected ✅ / Not connected ❌” wherever projects are listed._  
-   *Why?* Gives immediate feedback and reduces support questions.
-
-5. **n8n**  
-   _Add `docs/n8n-github-sync.md` explaining:_  
-   • which GitHub webhook events trigger the workflow  
-   • how n8n fetches the PAT via `get_github_token(project_id)`  
-   • required secrets and a node-by-node outline of the flow.  
-   *Why?* Provides the n8n team a clear contract without digging through backend code.
-
-6. **Set environment secrets**  
-   _Populate in Supabase:_ `GH_CLIENT_ID`, `GH_CLIENT_SECRET`, `GH_TOKEN_SECRET_PHRASE`, `SUPABASE_SERVICE_ROLE_KEY`.  
-   _Populate in n8n:_ `GH_WEBHOOK_SECRET`, `SUPABASE_SERVICE_ROLE`.  
-   *Why?* Enables encryption, OAuth exchange, and webhook verification across all environments.
+### Future Releases
 
 ### **🟡 Medium Priority - Enhanced Features**
 
