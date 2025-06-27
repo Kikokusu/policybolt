@@ -76,8 +76,8 @@ export function SignupPage() {
           setError(error.message || 'An error occurred during sign up.');
         }
       } else {
-        // Since email confirmation is disabled, redirect directly to plan selection
-        navigate('/select-plan');
+        // Redirect to email confirmation page
+        navigate('/auth/confirm-email');
       }
     } catch (err) {
       console.error('Signup error:', err);
