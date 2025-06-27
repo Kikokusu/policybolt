@@ -1,6 +1,6 @@
 # PolicyBolt 1.0
 
-AI-powered privacy policy management platform that automatically generates and maintains privacy policies for developers and startups.
+AI-powered privacy policy management platform that automatically generates and maintains privacy policies for vibe-coders, developers and startups.
 
 ## 🚀 Current Status
 
