@@ -1,0 +1,400 @@
+{
+  "name": "policy_scan",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "policy-update-pr-diff",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -820,
+        1840
+      ],
+      "id": "10da130d-9025-429f-ab72-0d6e02760e35",
+      "name": "Webhook",
+      "webhookId": "20bd75f8-c29c-4068-8f06-f6cabc2306a5"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "commit_id",
+              "value": "={{ $('Supabase').item.json.commit_id }}",
+              "type": "string",
+              "id": "2d77301b-f4d9-4e49-845d-0c874bc69c1f"
+            },
+            {
+              "name": "default_branch",
+              "value": "={{ $('Supabase').item.json.default_branch }}",
+              "type": "string",
+              "id": "df9f281f-d49f-40b3-80cb-c50adad5fc49"
+            },
+            {
+              "name": "github_repository_name",
+              "value": "={{ $('Supabase').item.json.github_repository_name }}",
+              "type": "string",
+              "id": "f2e08bd0-5628-4cf0-8442-b6a5dfe9418c"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -160,
+        1840
+      ],
+      "id": "5135cd4e-b3ad-485a-9231-1e56ccbb1468",
+      "name": "Extract PR Info"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/{{ $json.github_repository_name }}/commits?per_page=1",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=token  {{ $('Github Access Token').item.json.token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/vnd.github.v3+json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        60,
+        1840
+      ],
+      "id": "7f07b4a6-95a1-4bf1-943e-194c58a5e36b",
+      "name": "Fetch PR Data"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "projects",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $json.body.project_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -600,
+        1840
+      ],
+      "id": "fe1b1fdf-9378-46aa-bf85-f4867295309f",
+      "name": "Supabase",
+      "credentials": {
+        "supabaseApi": {
+          "id": "i15A7dTVn834u45U",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://jptuanwflzknzhzruvab.supabase.co/functions/v1/github-app-token",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "installation_id",
+              "value": "={{ $json.github_installation_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -380,
+        1840
+      ],
+      "id": "ff07df4b-fe07-4d44-aa88-fdfecf39f34f",
+      "name": "Github Access Token",
+      "credentials": {
+        "supabaseApi": {
+          "id": "i15A7dTVn834u45U",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ca9076d3-e558-4625-b2ac-0ad76123b340",
+              "leftValue": "={{ $('Extract PR Info').item.json.commit_id }}",
+              "rightValue": "={{ $('Supabase').item.json.commit_id }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        300,
+        1840
+      ],
+      "id": "89a00d54-e785-43a6-82c1-1bb1020441cf",
+      "name": "If"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        680,
+        2000
+      ],
+      "id": "5f14f90c-bf23-4b6d-ad14-f414880e4cab",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/{{ $('Extract PR Info').item.json.github_repository_name }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=token  {{ $('Github Access Token').item.json.token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/vnd.github.v3+json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        1640
+      ],
+      "id": "e4266f09-dc91-49ff-a672-8e3d337886c7",
+      "name": "Get branch name"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "installation_id",
+              "value": "={{ $('Supabase').item.json.github_installation_id }}",
+              "type": "number",
+              "id": "c63b3c9f-771f-48a3-91eb-08fc74c0ff8f"
+            },
+            {
+              "name": "project_id",
+              "value": "={{ $('Supabase').item.json.id }}",
+              "type": "string",
+              "id": "54cb8e5f-36cf-434a-914e-ec428148d251"
+            },
+            {
+              "name": "github_repository_name",
+              "value": "={{ $('Supabase').item.json.github_repository_name }}",
+              "type": "string",
+              "id": "27b50336-2723-48f9-90bc-67675eee80a2"
+            },
+            {
+              "name": "config",
+              "value": "={{ $('Supabase').item.json.config }}",
+              "type": "object",
+              "id": "acfe849c-241b-425e-a254-9a0d7f11050e"
+            },
+            {
+              "name": "credentials",
+              "value": "={token: {{ $('Github Access Token').item.json.token }} }",
+              "type": "object",
+              "id": "5fb446ee-8954-4f2a-b3de-12a4100f5b06"
+            },
+            {
+              "name": "user_id",
+              "value": "={{ $('Supabase').item.json.user_id }}",
+              "type": "string",
+              "id": "7ba15a24-12fd-4af4-bbda-54969da6652a"
+            },
+            {
+              "name": "name",
+              "value": "={{ $('Supabase').item.json.name }}",
+              "type": "string",
+              "id": "64f6bd25-b9a8-4843-806c-6368fd0ab3dc"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        980,
+        1640
+      ],
+      "id": "36822713-2c60-4c67-88cf-75cfd56133d8",
+      "name": "Prepare Data"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n-pcxl0-u32695.vm.elestio.app/webhook/github-repo-scan",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"credentials\": {\n        \"token\": \"{{ $json.credentials.token }}\"\n    },\n    \"installation_id\": {{ $('Supabase').item.json.github_installation_id }},\n    \"project_id\": \"{{ $('Supabase').item.json.id }}\",\n    \"user_id\": \"{{ $('Supabase').item.json.user_id }}\",\n    \"name\": \"{{ $('Supabase').item.json.name }}\",\n    \"github_repository_name\": \"{{ $('Supabase').item.json.github_repository_name }}\",\n    \"config\": {{ JSON.stringify($('Supabase').item.json.config, null, 2) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1220,
+        1740
+      ],
+      "id": "d4c26916-aeec-4c92-a8a0-f056d12f66f7",
+      "name": "HTTP Request"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract PR Info": {
+      "main": [
+        [
+          {
+            "node": "Fetch PR Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch PR Data": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase": {
+      "main": [
+        [
+          {
+            "node": "Github Access Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Github Access Token": {
+      "main": [
+        [
+          {
+            "node": "Extract PR Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Get branch name",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get branch name": {
+      "main": [
+        [
+          {
+            "node": "Prepare Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Data": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fe407ee8b63b416b2fd115a1b104b6558cbd4b23a21083dfd5b29f25d9e85110"
+  },
+  "tags": []
+}
