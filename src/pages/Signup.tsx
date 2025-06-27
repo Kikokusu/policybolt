@@ -76,6 +76,8 @@ export function SignupPage() {
           setError(error.message || 'An error occurred during sign up.');
         }
       } else {
+        // Store email for potential resend functionality
+        sessionStorage.setItem('signup_email', email);
         // Redirect to email confirmation page
         navigate('/auth/confirm-email');
       }

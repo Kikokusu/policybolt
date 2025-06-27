@@ -8,6 +8,7 @@ import { ContactPage } from '@/pages/Contact';
 import { PrivacyPage } from '@/pages/Privacy';
 import { LoginPage } from '@/pages/Login';
 import { SignupPage } from '@/pages/Signup';
+import { ConfirmEmailPage } from '@/pages/ConfirmEmail';
 import { PlanSelectionPage } from '@/pages/PlanSelection';
 import { SuccessPage } from '@/pages/Success';
 import { DashboardPage } from '@/pages/Dashboard';
@@ -37,6 +38,7 @@ function App() {
             <Route path="/legal/privacy" element={<PrivacyPage />} />
             <Route path="/auth/login" element={<LoginPage />} />
             <Route path="/auth/signup" element={<SignupPage />} />
+            <Route path="/auth/confirm-email" element={<ConfirmEmailPage />} />
             <Route path="/select-plan" element={<PlanSelectionPage />} />
             <Route path="/success" element={<SuccessPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
