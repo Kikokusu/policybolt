@@ -322,7 +322,7 @@ TO_EMAILS=support@yourdomain.com,admin@yourdomain.com
 
 ## 🚀 Deployment
 
-The application is ready for deployment to any static hosting provider. Build with `npm run build` and deploy the `dist` folder.
+The application is ready for deployment to any static hosting provider such as Vercel, Netlify, or similar platforms. Build with `npm run build` and deploy the `dist` folder.
 
 ---
 
