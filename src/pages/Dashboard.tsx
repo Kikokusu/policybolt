@@ -331,7 +331,8 @@ export function DashboardPage() {
                     {projects.slice(0, 3).map((project) => (
                       <div
                         key={project.id}
-                        className="p-3 border rounded-lg space-y-2"
+                        className="p-3 border rounded-lg space-y-2 cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => navigate('/dashboard/projects')}
                       >
                         <div className="flex items-center justify-between">
                           <h4 className="text-sm font-medium">{project.name}</h4>

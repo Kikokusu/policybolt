@@ -660,6 +660,42 @@ function PolicyCard({
                 </>
               )}
             </div>
+            {(project.commit_id || project.default_branch) && (
+              <div className="flex items-center space-x-4 mt-1">
+                {project.default_branch && (
+                  <>
+                    <span className="flex items-center space-x-1">
+                      <GitBranch className="w-3 h-3" />
+                      <span>{project.default_branch}</span>
+                    </span>
+                  </>
+                )}
+                {project.commit_id && (
+                  <>
+                    {project.default_branch && <span>•</span>}
+                    <span className="flex items-center space-x-1">
+                      <Code className="w-3 h-3" />
+                      <span>{project.commit_id.substring(0, 7)}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-4 w-4 p-0 hover:bg-muted"
+                        onClick={async () => {
+                          const success = await copyToClipboard(project.commit_id);
+                          if (success) {
+                            toast.success('Commit ID copied to clipboard');
+                          } else {
+                            toast.error('Failed to copy commit ID');
+                          }
+                        }}
+                      >
+                        <Copy className="w-3 h-3" />
+                      </Button>
+                    </span>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
         
