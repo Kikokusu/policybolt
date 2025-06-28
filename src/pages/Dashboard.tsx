@@ -5,6 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
   FileText,
   Shield,
   GitBranch,
@@ -18,6 +26,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStripeSubscription } from '@/hooks/useStripeSubscription';
 import { useProjects } from '@/hooks/useProjects';
+import { usePolicies } from '@/hooks/usePolicies';
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -40,6 +49,7 @@ export function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const { subscription, hasActiveSubscription, loading: subscriptionLoading, getPlanName } = useStripeSubscription();
   const { projects, totalPolicyUpdates, loading: projectsLoading } = useProjects();
+  const { policies, loading: policiesLoading } = usePolicies();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -55,7 +65,7 @@ export function DashboardPage() {
     }
   }, [user, authLoading, subscriptionLoading, hasActiveSubscription, navigate]);
 
-  if (authLoading || subscriptionLoading || projectsLoading) {
+  if (authLoading || subscriptionLoading || projectsLoading || policiesLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -171,32 +181,99 @@ export function DashboardPage() {
                     Auto-generated and maintained privacy policies
                   </CardDescription>
                 </div>
-                {projects.length > 0 && (
+                {policies.length > 0 && (
                   <Button variant="outline" asChild>
                     <Link to="/dashboard/policies">
-                      View All
+                      View All ({policies.length})
                       <ArrowUpRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
                 )}
               </CardHeader>
-              <CardContent className="flex-1 flex items-center justify-center">
-                <div className="text-center py-12">
-                  <FileText className="w-16 h-16 text-muted-foreground mx-auto mb-6" />
-                  <h3 className="text-lg font-semibold mb-2">No policies yet</h3>
-                  <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
-                    {projects.length === 0 
-                      ? "Add your first project to start generating privacy policies automatically."
-                      : "Your policies will appear here once we analyze your project and generate them."
-                    }
-                  </p>
-                  <Button asChild>
-                    <Link to="/dashboard/projects/new">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Your First Project
-                    </Link>
-                  </Button>
-                </div>
+              <CardContent>
+                {policies.length === 0 ? (
+                  <div className="text-center py-12">
+                    <FileText className="w-16 h-16 text-muted-foreground mx-auto mb-6" />
+                    <h3 className="text-lg font-semibold mb-2">No policies yet</h3>
+                    <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
+                      {projects.length === 0 
+                        ? "Add your first project to start generating privacy policies automatically."
+                        : "Your policies will appear here once we analyze your project and generate them."
+                      }
+                    </p>
+                    <Button asChild>
+                      <Link to="/dashboard/projects/new">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Your First Project
+                      </Link>
+                    </Button>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Version</TableHead>
+                        <TableHead>Project</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Created</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {policies
+                        .sort((a, b) => {
+                          // Sort by status: active first, then pending_review, then inactive
+                          const statusOrder = { 'active': 0, 'pending_review': 1, 'inactive': 2 };
+                          const aOrder = statusOrder[a.status as keyof typeof statusOrder] ?? 3;
+                          const bOrder = statusOrder[b.status as keyof typeof statusOrder] ?? 3;
+                          
+                          if (aOrder !== bOrder) {
+                            return aOrder - bOrder;
+                          }
+                          
+                          // If same status, sort by creation date (newest first)
+                          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+                        })
+                        .slice(0, 5)
+                        .map((policy) => (
+                        <TableRow key={policy.id}>
+                          <TableCell className="font-medium">
+                            {policy.title}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{policy.version}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            {policy.project?.name || 'Unknown Project'}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant="secondary"
+                              className={getStatusColor(policy.status)}
+                            >
+                              {policy.status === 'pending_review' ? 'Pending' : 
+                               policy.status === 'active' ? 'Active' : 
+                               'Inactive'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {new Date(policy.created_at).toLocaleDateString()}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+                {policies.length > 5 && (
+                  <div className="mt-4 text-center">
+                    <Button variant="outline" size="sm" asChild>
+                      <Link to="/dashboard/policies">
+                        View All Policies ({policies.length})
+                        <ArrowUpRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -254,7 +331,8 @@ export function DashboardPage() {
                     {projects.slice(0, 3).map((project) => (
                       <div
                         key={project.id}
-                        className="p-3 border rounded-lg space-y-2"
+                        className="p-3 border rounded-lg space-y-2 cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => navigate('/dashboard/projects')}
                       >
                         <div className="flex items-center justify-between">
                           <h4 className="text-sm font-medium">{project.name}</h4>

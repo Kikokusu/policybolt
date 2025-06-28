@@ -19,6 +19,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // If Supabase is not configured, set loading to false and return
+    if (!supabase) {
+      setSession(null)
+      setUser(null)
+      setLoading(false)
+      return
+    }
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       // Handle invalid refresh token error by clearing the session
@@ -48,6 +56,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const signUp = async (email: string, password: string, userData?: { name: string }) => {
+    if (!supabase) {
+      return { error: new Error('Authentication service not available') }
+    }
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -61,6 +73,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signIn = async (email: string, password: string) => {
+    if (!supabase) {
+      return { error: new Error('Authentication service not available') }
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -69,6 +85,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
+    if (!supabase) {
+      return { error: new Error('Authentication service not available') }
+    }
+
     try {
       const { error } = await supabase.auth.signOut()
       

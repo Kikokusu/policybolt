@@ -1,19 +1,26 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Navigation } from '@/components/shared/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Navigation } from "@/components/shared/navigation";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   FileText,
   Shield,
@@ -36,114 +43,143 @@ import {
   Brain,
   Zap,
   ExternalLink,
-} from 'lucide-react';
-import { Link as RouterLink } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { useSubscription } from '@/hooks/useSubscription';
-import { useProjects } from '@/hooks/useProjects';
-import { toast } from 'sonner';
+} from "lucide-react";
+import { Link as RouterLink } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/hooks/useSubscription";
+import { useProjects } from "@/hooks/useProjects";
+import { toast } from "sonner";
+import { getGitHubDevConfig } from "@/lib/github-dev-config";
+import { triggerPolicyGeneration } from "@/lib/webhook-utils";
+import type { Project } from "@/types/database";
 
 const getPurposeIcon = (purpose: string) => {
   switch (purpose) {
-    case 'website': return Globe;
-    case 'mobile-app': return Smartphone;
-    case 'saas-platform': return Layers;
-    default: return Code;
+    case "website":
+      return Globe;
+    case "mobile-app":
+      return Smartphone;
+    case "saas-platform":
+      return Layers;
+    default:
+      return Code;
   }
 };
 
 const getPurposeLabel = (purpose: string) => {
   switch (purpose) {
-    case 'website': return 'Website';
-    case 'mobile-app': return 'Mobile App';
-    case 'saas-platform': return 'SaaS Platform';
-    default: return 'Unknown';
+    case "website":
+      return "Website";
+    case "mobile-app":
+      return "Mobile App";
+    case "saas-platform":
+      return "SaaS Platform";
+    default:
+      return "Unknown";
   }
 };
 
 const getAIIcon = (aiUsage: string) => {
   switch (aiUsage) {
-    case 'no-ai': return CheckCircle;
-    case 'basic-ai': return Bot;
-    case 'advanced-ai': return Brain;
-    default: return Zap;
+    case "no-ai":
+      return CheckCircle;
+    case "basic-ai":
+      return Bot;
+    case "advanced-ai":
+      return Brain;
+    default:
+      return Zap;
   }
 };
 
 const getAILabel = (aiUsage: string) => {
   switch (aiUsage) {
-    case 'no-ai': return 'No AI Features';
-    case 'basic-ai': return 'Basic AI Features';
-    case 'advanced-ai': return 'Advanced AI Systems';
-    default: return 'Unknown';
+    case "no-ai":
+      return "No AI Features";
+    case "basic-ai":
+      return "Basic AI Features";
+    case "advanced-ai":
+      return "Advanced AI Systems";
+    default:
+      return "Unknown";
   }
 };
 
 const formatRegions = (regions: string[]) => {
-  if (!regions || regions.length === 0) return 'None selected';
-  
+  if (!regions || regions.length === 0) return "None selected";
+
   const regionMap: { [key: string]: string } = {
-    'us': 'United States',
-    'eu': 'European Union',
-    'uk': 'United Kingdom',
-    'canada': 'Canada',
-    'australia': 'Australia',
-    'asia-pacific': 'Asia-Pacific',
-    'latin-america': 'Latin America',
-    'other': 'Other Regions',
+    us: "United States",
+    eu: "European Union",
+    uk: "United Kingdom",
+    canada: "Canada",
+    australia: "Australia",
+    "asia-pacific": "Asia-Pacific",
+    "latin-america": "Latin America",
+    other: "Other Regions",
   };
-  
-  return regions.map(r => regionMap[r] || r).join(', ');
+
+  return regions.map((r) => regionMap[r] || r).join(", ");
 };
 
 const formatAITypes = (aiTypes: string[]) => {
-  if (!aiTypes || aiTypes.length === 0) return 'None';
-  
+  if (!aiTypes || aiTypes.length === 0) return "None";
+
   const typeMap: { [key: string]: string } = {
-    'recommendations': 'Recommendations',
-    'chatbots': 'Chatbots',
-    'personalization': 'Personalization',
-    'fraud-detection': 'Fraud Detection',
-    'content-moderation': 'Content Moderation',
-    'image-recognition': 'Image Recognition',
-    'voice-processing': 'Voice Processing',
-    'predictive-analytics': 'Predictive Analytics',
+    recommendations: "Recommendations",
+    chatbots: "Chatbots",
+    personalization: "Personalization",
+    "fraud-detection": "Fraud Detection",
+    "content-moderation": "Content Moderation",
+    "image-recognition": "Image Recognition",
+    "voice-processing": "Voice Processing",
+    "predictive-analytics": "Predictive Analytics",
   };
-  
-  return aiTypes.map(t => typeMap[t] || t).join(', ');
+
+  return aiTypes.map((t) => typeMap[t] || t).join(", ");
 };
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'active':
-      return 'bg-success text-white';
-    case 'inactive':
-      return 'bg-muted text-muted-foreground';
-    case 'error':
-      return 'bg-red-500 text-white';
+    case "active":
+      return "bg-success text-white";
+    case "inactive":
+      return "bg-muted text-muted-foreground";
+    case "error":
+      return "bg-red-500 text-white";
     default:
-      return 'bg-muted text-muted-foreground';
+      return "bg-muted text-muted-foreground";
   }
 };
 
 export function ProjectsPage() {
   const { user, loading: authLoading } = useAuth();
   const { hasSubscription, loading: subscriptionLoading } = useSubscription();
-  const { projects, deleteProject, updateProject, loading: projectsLoading } = useProjects();
+  const {
+    projects,
+    deleteProject,
+    updateProject,
+    loading: projectsLoading,
+  } = useProjects();
   const navigate = useNavigate();
-  
-  const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null);
-  const [updatingProjectId, setUpdatingProjectId] = useState<string | null>(null);
+
+  const [deletingProjectId, setDeletingProjectId] = useState<string | null>(
+    null
+  );
+  const [updatingProjectId, setUpdatingProjectId] = useState<string | null>(
+    null
+  );
+  const [testingWebhookId, setTestingWebhookId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate('/auth/login');
+      navigate("/auth/login");
       return;
     }
 
     if (!authLoading && !subscriptionLoading && user && !hasSubscription) {
-      navigate('/select-plan');
+      navigate("/select-plan");
       return;
     }
   }, [user, authLoading, subscriptionLoading, hasSubscription, navigate]);
@@ -154,46 +190,116 @@ export function ProjectsPage() {
 
     try {
       const { error } = await deleteProject(projectId);
-      
+
       if (error) {
         throw error;
       }
 
-      toast.success('Project deleted successfully');
+      toast.success("Project deleted successfully");
     } catch (err: any) {
-      console.error('Error deleting project:', err);
-      setError(err.message || 'Failed to delete project');
-      toast.error('Failed to delete project');
+      console.error("Error deleting project:", err);
+      setError(err.message || "Failed to delete project");
+      toast.error("Failed to delete project");
     } finally {
       setDeletingProjectId(null);
     }
   };
 
-  const handleToggleGitHub = async (projectId: string, currentlyConnected: boolean) => {
+  const handleToggleGitHub = async (
+    projectId: string,
+    currentlyConnected: boolean
+  ) => {
     setUpdatingProjectId(projectId);
     setError(null);
 
     try {
-      const { error } = await updateProject(projectId, {
-        github_synced: !currentlyConnected,
-        repository_url: !currentlyConnected ? null : undefined, // Clear URL when disconnecting
-      });
-      
-      if (error) {
-        throw error;
-      }
+      if (currentlyConnected) {
+        // Disconnecting - clear GitHub data and restore original repository URL
+        // For now, we'll just clear it since we don't store the original URL separately
+        const { error } = await updateProject(projectId, {
+          github_synced: false,
+          github_installation_id: null,
+          github_repository_name: null,
+        });
 
-      toast.success(
-        currentlyConnected 
-          ? 'GitHub repository disconnected successfully' 
-          : 'GitHub repository connected successfully'
-      );
+        if (error) {
+          throw error;
+        }
+
+        toast.success("GitHub repository disconnected successfully");
+      } else {
+        // Connecting - redirect to GitHub App installation
+        const config = getGitHubDevConfig();
+        
+        // Get the current project and extract repository name from URL
+        const currentProject = projects.find(p => p.id === projectId);
+        
+        if (!currentProject) {
+          throw new Error('Project not found');
+        }
+        
+        // Check if repository_url exists and is a GitHub URL
+        if (!currentProject.repository_url) {
+          throw new Error('No GitHub repository URL found for this project. Please check your project configuration.');
+        }
+        
+        // Extract repository name from repository_url (e.g., "correadevuk/policybolt")
+        const match = currentProject.repository_url.match(/github\.com\/(.+?)(?:\.git)?(?:\/)?$/);
+        const repositoryName = match ? match[1] : null;
+        
+        console.log('Debug - Project data:', {
+          projectId,
+          repository_url: currentProject.repository_url,
+          extractedRepositoryName: repositoryName
+        });
+        
+        if (!repositoryName) {
+          throw new Error('Could not extract repository name from URL: ' + currentProject.repository_url);
+        }
+        
+        // Store project ID and repository name for callback
+        sessionStorage.setItem('github_project_id', projectId);
+        sessionStorage.setItem('github_repository_name', repositoryName);
+
+        // Redirect to GitHub App installation
+        const state = btoa(JSON.stringify({ 
+          project_id: projectId, 
+          repository: repositoryName, 
+          return_url: config.callbackUrl 
+        }));
+        const installUrl = `https://github.com/apps/${config.githubAppId}/installations/new?state=${encodeURIComponent(state)}`;
+        window.location.href = installUrl;
+      }
     } catch (err: any) {
-      console.error('Error updating GitHub connection:', err);
-      setError(err.message || 'Failed to update GitHub connection');
-      toast.error('Failed to update GitHub connection');
+      console.error("Error updating GitHub connection:", err);
+      setError(err.message || "Failed to update GitHub connection");
+      toast.error("Failed to update GitHub connection");
     } finally {
       setUpdatingProjectId(null);
+    }
+  };
+
+  const handleTestWebhook = async (project: Project) => {
+    setTestingWebhookId(project.id);
+    setError(null);
+
+    try {
+      if (!project.github_installation_id) {
+        throw new Error('Project must have GitHub connected to test webhook');
+      }
+
+      if (!project.config) {
+        throw new Error('Project must have configuration to test webhook');
+      }
+
+      await triggerPolicyGeneration(project);
+      toast.success('Webhook test successful! Check your n8n workflow.');
+    } catch (err: any) {
+      console.error('Webhook test error:', err);
+      setError(err.message || 'Failed to test webhook');
+      toast.error('Webhook test failed: ' + (err.message || 'Unknown error'));
+    } finally {
+      setTestingWebhookId(null);
     }
   };
 
@@ -215,7 +321,7 @@ export function ProjectsPage() {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -251,12 +357,11 @@ export function ProjectsPage() {
               <FileText className="w-16 h-16 text-muted-foreground mb-6" />
               <h3 className="text-xl font-semibold mb-2">No projects yet</h3>
               <p className="text-muted-foreground text-center mb-6 max-w-md">
-                {hasActiveSubscription 
+                {hasSubscription
                   ? "Create your first project to start generating privacy policies automatically. Connect your GitHub repository for real-time monitoring."
-                  : "You need an active subscription to create and manage projects. Please upgrade your plan to continue."
-                }
+                  : "You need an active subscription to create and manage projects. Please upgrade your plan to continue."}
               </p>
-              {hasActiveSubscription ? (
+              {hasSubscription ? (
                 <Button asChild>
                   <RouterLink to="/dashboard/projects/new">
                     <Plus className="mr-2 w-4 h-4" />
@@ -281,9 +386,15 @@ export function ProjectsPage() {
               const AIIcon = getAIIcon(config.aiUsage);
               const isDeleting = deletingProjectId === project.id;
               const isUpdating = updatingProjectId === project.id;
+              const isTestingWebhook = testingWebhookId === project.id;
+              // Check if GitHub is connected by looking at github_installation_id
+              const isGitHubConnected = project.github_synced && project.github_installation_id;
 
               return (
-                <Card key={project.id} className="shadow-lg border-0 card-hover">
+                <Card
+                  key={project.id}
+                  className="shadow-lg border-0 card-hover"
+                >
                   <CardHeader className="pb-4">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center space-x-3">
@@ -291,7 +402,9 @@ export function ProjectsPage() {
                           <PurposeIcon className="w-6 h-6 text-white" />
                         </div>
                         <div>
-                          <CardTitle className="text-xl">{project.name}</CardTitle>
+                          <CardTitle className="text-xl">
+                            {project.name}
+                          </CardTitle>
                           <CardDescription className="flex items-center space-x-2">
                             <Badge
                               variant="secondary"
@@ -307,11 +420,14 @@ export function ProjectsPage() {
                           </CardDescription>
                         </div>
                       </div>
-                      
+
                       {/* GitHub Status */}
                       <div className="flex items-center space-x-2">
-                        {project.github_synced ? (
-                          <Badge variant="secondary" className="bg-success text-white">
+                        {isGitHubConnected ? (
+                          <Badge
+                            variant="secondary"
+                            className="bg-success text-white"
+                          >
                             <GitBranch className="w-3 h-3 mr-1" />
                             Connected
                           </Badge>
@@ -326,7 +442,7 @@ export function ProjectsPage() {
                   </CardHeader>
 
                   <CardContent className="space-y-6">
-                    {/* Repository URL */}
+                    {/* Repository URL - Always show if available */}
                     {project.repository_url && (
                       <div className="flex items-center space-x-2 p-3 bg-muted/30 rounded-lg">
                         <GitBranch className="w-4 h-4 text-muted-foreground" />
@@ -342,24 +458,47 @@ export function ProjectsPage() {
                       </div>
                     )}
 
+                    {/* GitHub Installation Info */}
+                    {isGitHubConnected && (
+                      <div className="flex items-center space-x-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                        <GitBranch className="w-4 h-4 text-green-600" />
+                        <div className="flex-1">
+                          <div className="text-sm text-green-700 dark:text-green-400">
+                            GitHub App connected
+                            {project.github_repository_name && (
+                              <span className="block text-xs text-green-600 dark:text-green-300 mt-1">
+                                📁 Repository: {project.github_repository_name}
+                              </span>
+                            )}
+                            {project.github_installation_id && (
+                              <span className="block text-xs text-green-600 dark:text-green-300 mt-1">
+                                🔗 Installation ID: {project.github_installation_id}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Configuration Summary */}
                     <div className="space-y-4">
                       <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
                         Configuration Summary
                       </h4>
-                      
+
                       <div className="grid grid-cols-1 gap-4">
                         {/* Geography */}
                         {config.geographyScope && (
                           <div className="flex items-start space-x-3">
                             <MapPin className="w-4 h-4 text-primary mt-0.5" />
                             <div>
-                              <p className="text-sm font-medium">User Geography</p>
+                              <p className="text-sm font-medium">
+                                User Geography
+                              </p>
                               <p className="text-xs text-muted-foreground">
-                                {config.geographyScope === 'worldwide' 
-                                  ? 'Worldwide' 
-                                  : formatRegions(config.selectedRegions)
-                                }
+                                {config.geographyScope === "worldwide"
+                                  ? "Worldwide"
+                                  : formatRegions(config.selectedRegions)}
                               </p>
                             </div>
                           </div>
@@ -373,11 +512,12 @@ export function ProjectsPage() {
                               <p className="text-sm font-medium">AI Features</p>
                               <p className="text-xs text-muted-foreground">
                                 {getAILabel(config.aiUsage)}
-                                {config.aiTypes && config.aiTypes.length > 0 && (
-                                  <span className="block mt-1">
-                                    Types: {formatAITypes(config.aiTypes)}
-                                  </span>
-                                )}
+                                {config.aiTypes &&
+                                  config.aiTypes.length > 0 && (
+                                    <span className="block mt-1">
+                                      Types: {formatAITypes(config.aiTypes)}
+                                    </span>
+                                  )}
                               </p>
                             </div>
                           </div>
@@ -390,10 +530,9 @@ export function ProjectsPage() {
                             <div>
                               <p className="text-sm font-medium">Hosting</p>
                               <p className="text-xs text-muted-foreground">
-                                {config.hostingProvider === 'other' 
-                                  ? config.customHosting || 'Custom Provider'
-                                  : config.hostingProvider
-                                }
+                                {config.hostingProvider === "other"
+                                  ? config.customHosting || "Custom Provider"
+                                  : config.hostingProvider}
                                 {config.hostingRegion && (
                                   <span> • {config.hostingRegion}</span>
                                 )}
@@ -409,7 +548,9 @@ export function ProjectsPage() {
                             <div>
                               <p className="text-sm font-medium">Language</p>
                               <p className="text-xs text-muted-foreground">
-                                {config.englishPreference === 'us' ? 'US English' : 'UK English'}
+                                {config.englishPreference === "us"
+                                  ? "US English"
+                                  : "UK English"}
                               </p>
                             </div>
                           </div>
@@ -420,12 +561,17 @@ export function ProjectsPage() {
                     {/* Project Metadata */}
                     <div className="pt-4 border-t space-y-2">
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>Created: {new Date(project.created_at).toLocaleDateString()}</span>
                         <span>
-                          Last scan: {project.last_scan_at 
-                            ? new Date(project.last_scan_at).toLocaleDateString()
-                            : 'Never'
-                          }
+                          Created:{" "}
+                          {new Date(project.created_at).toLocaleDateString()}
+                        </span>
+                        <span>
+                          Last scan:{" "}
+                          {project.last_scan_at
+                            ? new Date(
+                                project.last_scan_at
+                              ).toLocaleDateString()
+                            : "Never"}
                         </span>
                       </div>
                     </div>
@@ -436,23 +582,51 @@ export function ProjectsPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleToggleGitHub(project.id, project.github_synced)}
+                          onClick={() =>
+                            handleToggleGitHub(
+                              project.id,
+                              isGitHubConnected
+                            )
+                          }
                           disabled={isUpdating}
                         >
                           {isUpdating ? (
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          ) : project.github_synced ? (
+                          ) : isGitHubConnected ? (
                             <Unlink className="w-4 h-4 mr-2" />
                           ) : (
-                            <Link className="w-4 h-4 mr-2" />
+                            <GitBranch className="w-4 h-4 mr-2" />
                           )}
-                          {project.github_synced ? 'Unlink GitHub' : 'Connect GitHub'}
+                          {isGitHubConnected
+                            ? "Disconnect GitHub"
+                            : "Connect GitHub"}
                         </Button>
+                        
+                        {/* Test Webhook Button - Only in Development */}
+                        {import.meta.env.DEV && isGitHubConnected && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleTestWebhook(project)}
+                            disabled={isTestingWebhook}
+                          >
+                            {isTestingWebhook ? (
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            ) : (
+                              <Zap className="w-4 h-4 mr-2" />
+                            )}
+                            Test Webhook
+                          </Button>
+                        )}
                       </div>
 
                       <Dialog>
                         <DialogTrigger asChild>
-                          <Button variant="destructive" size="sm" disabled={isDeleting}>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            disabled={isDeleting}
+                          >
                             {isDeleting ? (
                               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                             ) : (
@@ -465,12 +639,16 @@ export function ProjectsPage() {
                           <DialogHeader>
                             <DialogTitle>Remove Project</DialogTitle>
                             <DialogDescription>
-                              Are you sure you want to remove "{project.name}"? This action cannot be undone.
-                              All associated privacy policies and configurations will be permanently deleted.
+                              Are you sure you want to remove "{project.name}"?
+                              This action cannot be undone. All associated
+                              privacy policies and configurations will be
+                              permanently deleted.
                             </DialogDescription>
                           </DialogHeader>
                           <DialogFooter>
-                            <Button variant="outline">Cancel</Button>
+                            <DialogClose asChild>
+                              <Button variant="outline">Cancel</Button>
+                            </DialogClose>
                             <Button
                               variant="destructive"
                               onClick={() => handleDeleteProject(project.id)}
@@ -482,7 +660,7 @@ export function ProjectsPage() {
                                   Removing...
                                 </>
                               ) : (
-                                'Remove Project'
+                                "Remove Project"
                               )}
                             </Button>
                           </DialogFooter>

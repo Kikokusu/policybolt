@@ -13,6 +13,13 @@ export function useSubscription() {
   // Fetch available plans
   useEffect(() => {
     async function fetchPlans() {
+      // If Supabase is not configured, set empty plans and finish loading
+      if (!supabase) {
+        setPlans([]);
+        setPlansLoading(false);
+        return;
+      }
+
       try {
         const { data, error } = await supabase
           .from('plans')

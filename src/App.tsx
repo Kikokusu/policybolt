@@ -8,6 +8,7 @@ import { ContactPage } from '@/pages/Contact';
 import { PrivacyPage } from '@/pages/Privacy';
 import { LoginPage } from '@/pages/Login';
 import { SignupPage } from '@/pages/Signup';
+import { ConfirmEmailPage } from '@/pages/ConfirmEmail';
 import { PlanSelectionPage } from '@/pages/PlanSelection';
 import { SuccessPage } from '@/pages/Success';
 import { DashboardPage } from '@/pages/Dashboard';
@@ -17,6 +18,8 @@ import { PoliciesPage } from '@/pages/Policies';
 import { PolicyEmbedPage } from '@/pages/PolicyEmbed';
 import { SettingsPage } from '@/pages/Settings';
 import { ProfilePage } from '@/pages/Profile';
+import { GitHubCallback } from '@/components/GitHubCallback';
+import { GitHubDebugInfo } from '@/components/GitHubDebugInfo';
 
 function App() {
   return (
@@ -35,6 +38,7 @@ function App() {
             <Route path="/legal/privacy" element={<PrivacyPage />} />
             <Route path="/auth/login" element={<LoginPage />} />
             <Route path="/auth/signup" element={<SignupPage />} />
+            <Route path="/auth/confirm-email" element={<ConfirmEmailPage />} />
             <Route path="/select-plan" element={<PlanSelectionPage />} />
             <Route path="/success" element={<SuccessPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
@@ -43,6 +47,12 @@ function App() {
             <Route path="/dashboard/policies" element={<PoliciesPage />} />
             <Route path="/dashboard/settings" element={<SettingsPage />} />
             <Route path="/dashboard/profile" element={<ProfilePage />} />
+            
+            {/* GitHub callback route */}
+            <Route path="/github/callback" element={<GitHubCallback />} />
+            
+            {/* Debug route for development */}
+            <Route path="/debug/github" element={<GitHubDebugInfo />} />
             
             {/* Embed routes - no authentication required */}
             <Route path="/embed/policy/:policyId" element={<PolicyEmbedPage />} />

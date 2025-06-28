@@ -1,26 +1,30 @@
-# PolicyBolt
+# PolicyBolt 1.0
 
-AI-powered privacy policy management platform that automatically generates and maintains privacy policies for developers and startups.
+AI-powered privacy policy management platform that automatically generates and maintains privacy policies for vibe-coders, developers and startups.
 
 ## 🚀 Current Status
 
 PolicyBolt is a functional SaaS application with user authentication, subscription management, project creation, and AI-powered privacy policy generation. Users can sign up, create projects, and generate privacy policies through an integrated n8n automation workflow.
 
+
 ## 📋 Current Features
 
 ### ✅ **Authentication & User Management**
+
 - User registration with email confirmation
 - Secure login/logout with Supabase Auth
 - Profile management (edit name, email, password)
 - Password strength requirements and validation
 
 ### ✅ **Subscription Management**
+
 - Three-tier pricing plans (Solo Developer, Growing Startup, Enterprise)
 - 14-day free trial (no credit card required)
 - Plan selection and subscription tracking
 - Project limits based on subscription tier
 
 ### ✅ **Project Management**
+
 - Multi-step project creation wizard with:
   - Project name and purpose (Website, Mobile App, SaaS Platform)
   - English spelling preference (US/UK)
@@ -32,6 +36,7 @@ PolicyBolt is a functional SaaS application with user authentication, subscripti
 - Project status tracking and management
 
 ### ✅ **Privacy Policy Generation**
+
 - AI-powered policy generation via n8n + GPT-4o integration
 - Manual policy generation trigger
 - Policy versioning and status tracking
@@ -39,21 +44,52 @@ PolicyBolt is a functional SaaS application with user authentication, subscripti
 - Policy content management and viewing
 
 ### ✅ **Policy Distribution**
+
 - Download policies as Markdown files
 - Embeddable widget for websites
 - Auto-updating embed code (no need to change code when policies update)
 - Public policy viewing via embed URLs
 
 ### ✅ **Dashboard & Analytics**
+
 - Personal dashboard with project overview
 - Policy update tracking and counters
 - Subscription status and trial information
 - Project and policy management interfaces
 
+## 🔄 n8n Automation Workflows
+
+PolicyBolt uses three main n8n workflows to handle AI-powered policy generation and GitHub integration. These workflows are stored in the `n8n/` folder:
+
+### **`policy_scan.json`**
+Monitors GitHub repositories for changes and triggers policy updates when new commits are detected. This workflow:
+- Receives webhook notifications from GitHub
+- Fetches project data from Supabase
+- Compares commit IDs to detect new changes
+- Triggers the repository scanning workflow when changes are found
+
+### **`policy_generation.json`**
+Handles the core AI-powered privacy policy generation process. This workflow:
+- Analyzes repository code and project configuration
+- Integrates with OpenAI GPT-4o for intelligent policy generation
+- Creates comprehensive privacy policies based on detected data patterns
+- Stores generated policies in Supabase with pending review status
+
+### **`github_repo_scan.json`**
+Performs deep analysis of GitHub repositories to identify privacy-relevant code patterns. This workflow:
+- Scans repository files for API integrations and third-party services
+- Detects data collection patterns and user tracking implementations
+- Identifies compliance requirements based on geographic targeting
+- Feeds analysis results to the policy generation workflow
+
+These workflows work together to provide seamless, automated privacy policy management that keeps pace with your development workflow.
+
 ## 🗄️ Database Schema (Supabase)
 
 ### **`plans`**
+
 Stores available subscription plans and their features.
+
 ```sql
 - id (uuid, primary key)
 - name (text) - Plan name (e.g., "Solo Developer")
@@ -66,7 +102,9 @@ Stores available subscription plans and their features.
 ```
 
 ### **`user_subscriptions`**
+
 Tracks user subscription status and trial information.
+
 ```sql
 - id (uuid, primary key)
 - user_id (uuid) - References auth.users
@@ -78,7 +116,9 @@ Tracks user subscription status and trial information.
 ```
 
 ### **`projects`**
+
 Stores user projects and their configuration.
+
 ```sql
 - id (uuid, primary key)
 - user_id (uuid) - References auth.users
@@ -92,7 +132,9 @@ Stores user projects and their configuration.
 ```
 
 ### **`policies`**
+
 Stores generated privacy policies with versioning and approval workflow.
+
 ```sql
 - id (uuid, primary key)
 - user_id (uuid) - References auth.users
@@ -106,7 +148,9 @@ Stores generated privacy policies with versioning and approval workflow.
 ```
 
 ### **`policy_updates`**
+
 Tracks policy update frequency per project.
+
 ```sql
 - id (uuid, primary key)
 - user_id (uuid) - References auth.users
@@ -120,17 +164,20 @@ Tracks policy update frequency per project.
 ## 🔄 Current Workflow
 
 ### **User Onboarding**
+
 1. User signs up and receives email confirmation
 2. User selects a subscription plan (starts 14-day trial)
 3. User accesses dashboard and can create projects
 
 ### **Project Creation**
+
 1. User goes through 6-step project wizard
 2. Configuration stored in `projects.config` as JSON
 3. Optional GitHub repository connection
 4. Project created with 'active' status
 
 ### **Policy Generation (via n8n)**
+
 1. User manually triggers policy generation OR
 2. GitHub webhook triggers automation (when implemented)
 3. n8n workflow:
@@ -142,76 +189,38 @@ Tracks policy update frequency per project.
 5. Policy status changes to 'active'
 
 ### **Policy Distribution**
+
 1. User can download active policies as Markdown
 2. User can get embed code for website integration
-3. Embed widget automatically shows latest active 
+3. Embed widget automatically shows latest active
 
 ### ** Payment Integration**
+
 - **Stripe Integration**: Complete payment processing for plan subscriptions
 - **Subscription Management**: Allow users to upgrade/downgrade plans
 - **Cancellation Flow**: Implement cancellation with retention offers (50% discount for 3 months)
 - **Billing Dashboard**: Invoice history, payment methods, billing cycles
 
-## 🚧 Pending Work
+### GitHub Integration\*\*
 
-### **🔴 High Priority - GitHub Integration**
 - **GitHub OAuth/App**: Authenticate and connect repositories
 - **Webhook Setup**: Automatic webhook creation for connected repos
 - **Push Detection**: Trigger policy generation on code changes
 - **Repository Analysis**: Enhanced code scanning for privacy-relevant changes
 
-
-### High-level checklist for adding **GitHub-connect**
-
-1. **Create secure database objects**  
-   *Ask Bolt to generate a Supabase migration that:*  
-   • adds a `github_tokens` table (PAT encrypted per project)  
-   • creates a `project_github_status` view that only shows `is_connected`  
-   • defines two helper SQL functions: `save_github_token` and `get_github_token`  
-   *Then run* `supabase db push`.  
-   *Why?* Provides a safe, audited home for the token and hides it from normal client queries.
-
-2. **Deploy the `github-exchange` edge function**  
-   *Have Bolt scaffold and deploy a Supabase Edge Function that:*  
-   • receives the GitHub OAuth `code` and `project_id` via POST  
-   • swaps the code for a PAT with GitHub  
-   • stores the encrypted token via `save_github_token` and returns `204`.  
-   *Why?* Keeps the OAuth secret-exchange server-side, so the browser never sees the PAT.
-
-3. **Add front-end entry points**  
-   *Create two React files:*  
-   • `ConnectGitHub.tsx` – button that starts OAuth (`scope=repo`).  
-   • `Callback.tsx` – page at `/github/callback` that validates `state`, posts to the edge function, then redirects back to the project.  
-   *Why?* Lets users authorise GitHub from the UI while keeping sensitive parts off the client.
-
-4. **Surface connection status in the UI**  
-   *Read the new `project_github_status` view to show “Connected ✅ / Not connected ❌” wherever projects are listed.*  
-   *Why?* Gives immediate feedback and reduces support questions.
-
-5. **n8n**  
-   *Add `docs/n8n-github-sync.md` explaining:*  
-   • which GitHub webhook events trigger the workflow  
-   • how n8n fetches the PAT via `get_github_token(project_id)`  
-   • required secrets and a node-by-node outline of the flow.  
-   *Why?* Provides the n8n team a clear contract without digging through backend code.
-
-6. **Set environment secrets**  
-   *Populate in Supabase:* `GH_CLIENT_ID`, `GH_CLIENT_SECRET`, `GH_TOKEN_SECRET_PHRASE`, `SUPABASE_SERVICE_ROLE_KEY`.  
-   *Populate in n8n:* `GH_WEBHOOK_SECRET`, `SUPABASE_SERVICE_ROLE`.  
-   *Why?* Enables encryption, OAuth exchange, and webhook verification across all environments.
-
-
+### Future Releases
 
 ### **🟡 Medium Priority - Enhanced Features**
+
 - **Policy Diff Viewer**: Show changes between policy versions
 - **Email Notifications**: Notify users of policy updates and approvals
 - **Team Collaboration**: Multi-user access for Growing Startup+ plans
 - **Custom Templates**: Allow users to customize policy templates
 
 ### **🟢 Low Priority - ChatBot**
+
 - **Chatbot Agent Landing Page**: Chat live for instant answers about PolicyBolt.
 - **Chatbot Agent Subscriber**: Instant answers to compliance and privacy policy questions.
-
 
 ## 🛠️ Technical Stack
 
@@ -254,6 +263,7 @@ TO_EMAILS=support@yourdomain.com,admin@yourdomain.com
 ```
 
 **Important Notes:**
+
 - All environment variables must be configured in your deployment environment
 - For Supabase Edge Functions, configure `RESEND_API_KEY`, `FROM_EMAIL`, and `TO_EMAILS` in your Supabase project's Edge Functions environment variables
 - For Stripe integration, configure `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` in your Supabase project's Edge Functions environment variables
@@ -261,8 +271,9 @@ TO_EMAILS=support@yourdomain.com,admin@yourdomain.com
 
 ## 🚀 Deployment
 
-The application is ready for deployment to any static hosting provider. Build with `npm run build` and deploy the `dist` folder.
+The application is ready for deployment to any static hosting provider such as Vercel, Netlify, or similar platforms. Build with `npm run build` and deploy the `dist` folder.
 
 ---
 
 **Note**: This is a functional MVP with core features implemented. The pending work items represent the roadmap for turning this into a complete commercial SaaS product.
+

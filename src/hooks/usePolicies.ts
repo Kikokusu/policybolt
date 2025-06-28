@@ -10,34 +10,35 @@ export function usePolicies() {
   const [error, setError] = useState<string | null>(null);
 
   // Fetch user policies
-  useEffect(() => {
-    async function fetchPolicies() {
-      if (!user) {
-        setPolicies([]);
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from('policies')
-          .select(`
-            *,
-            project:projects(*)
-          `)
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        setPolicies(data || []);
-      } catch (err) {
-        console.error('Error fetching policies:', err);
-        setError('Failed to load policies');
-      } finally {
-        setLoading(false);
-      }
+  const fetchPolicies = async () => {
+    if (!user) {
+      setPolicies([]);
+      setLoading(false);
+      return;
     }
 
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('policies')
+        .select(`
+          *,
+          project:projects(*)
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setPolicies(data || []);
+    } catch (err) {
+      console.error('Error fetching policies:', err);
+      setError('Failed to load policies');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchPolicies();
   }, [user]);
 
@@ -160,5 +161,6 @@ Generated on: ${new Date().toISOString()}`,
     approvePolicy,
     syncPolicy,
     deletePolicy,
+    refetch: fetchPolicies,
   };
 }

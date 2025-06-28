@@ -12,6 +12,13 @@ export function useStripeSubscription() {
 
   useEffect(() => {
     async function fetchSubscription() {
+      // If Supabase is not configured or user is not authenticated, set defaults
+      if (!supabase || !user) {
+        setSubscription(null);
+        setLoading(false);
+        return;
+      }
+
       if (!user) {
         setSubscription(null);
         setLoading(false);

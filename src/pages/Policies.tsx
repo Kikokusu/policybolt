@@ -48,6 +48,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useProjects } from '@/hooks/useProjects';
 import { usePolicies } from '@/hooks/usePolicies';
 import { downloadPolicyAsMarkdown, generateEmbedCode, copyToClipboard } from '@/utils/policyUtils';
+import { triggerPolicyGeneration } from '@/lib/webhook-utils';
 import { toast } from 'sonner';
 
 const getStatusColor = (status: string) => {
@@ -93,7 +94,7 @@ export function PoliciesPage() {
   const { user, loading: authLoading } = useAuth();
   const { hasSubscription, loading: subscriptionLoading } = useSubscription();
   const { projects } = useProjects();
-  const { policies, policiesByProject, approvePolicy, syncPolicy, deletePolicy, loading: policiesLoading } = usePolicies();
+  const { policies, policiesByProject, approvePolicy, syncPolicy, deletePolicy, loading: policiesLoading, refetch } = usePolicies();
   const navigate = useNavigate();
   
   const [approvingPolicyId, setApprovingPolicyId] = useState<string | null>(null);
@@ -103,6 +104,8 @@ export function PoliciesPage() {
   const [showEmbedDialog, setShowEmbedDialog] = useState<any>(null);
   const [embedCodeCopied, setEmbedCodeCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
+  const [showRefreshButton, setShowRefreshButton] = useState<string | null>(null); // Project ID that needs refresh button
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -115,6 +118,15 @@ export function PoliciesPage() {
       return;
     }
   }, [user, authLoading, subscriptionLoading, hasSubscription, navigate]);
+
+  // Cleanup polling interval on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+    };
+  }, [pollingInterval]);
 
   const handleApprovePolicy = async (policyId: string) => {
     setApprovingPolicyId(policyId);
@@ -137,22 +149,48 @@ export function PoliciesPage() {
     }
   };
 
+  const handleRefreshPolicies = async (projectId: string) => {
+    try {
+      await refetch();
+      setShowRefreshButton(null); // Hide refresh button after successful refresh
+      toast.success('Policies refreshed!');
+    } catch (error) {
+      console.error('Error refreshing policies:', error);
+      toast.error('Failed to refresh policies');
+    }
+  };
+
   const handleSyncPolicy = async (projectId: string) => {
     setSyncingProjectId(projectId);
     setError(null);
 
     try {
-      const { error } = await syncPolicy(projectId);
+      // Find the project to sync
+      const project = projects.find(p => p.id === projectId);
       
-      if (error) {
-        throw error;
+      if (!project) {
+        throw new Error('Project not found');
       }
 
-      toast.success('New policy generated successfully');
+      if (!project.github_installation_id) {
+        throw new Error('Project must have GitHub connected to sync policy');
+      }
+
+      if (!project.config) {
+        throw new Error('Project must have configuration to sync policy');
+      }
+
+      // Use the same webhook function as Test Webhook
+      await triggerPolicyGeneration(project);
+      
+      toast.success('Policy generation triggered successfully!');
+      
+      // Show refresh button for this project after operation completes
+      setShowRefreshButton(projectId);
     } catch (err: any) {
       console.error('Error syncing policy:', err);
       setError(err.message || 'Failed to generate policy');
-      toast.error('Failed to generate policy');
+      toast.error('Failed to generate policy: ' + (err.message || 'Unknown error'));
     } finally {
       setSyncingProjectId(null);
     }
@@ -338,19 +376,33 @@ export function PoliciesPage() {
                       </div>
                       <div className="flex items-center space-x-2">
                         {project.github_synced ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleSyncPolicy(project.id)}
-                            disabled={syncingProjectId === project.id}
-                          >
-                            {syncingProjectId === project.id ? (
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            ) : (
-                              <RefreshCw className="w-4 h-4 mr-2" />
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleSyncPolicy(project.id)}
+                              disabled={syncingProjectId === project.id}
+                            >
+                              {syncingProjectId === project.id ? (
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              ) : (
+                                <RefreshCw className="w-4 h-4 mr-2" />
+                              )}
+                              Sync Policy
+                            </Button>
+                            
+                            {/* Manual Refresh Button - appears after sync completes */}
+                            {showRefreshButton === project.id && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleRefreshPolicies(project.id)}
+                              >
+                                <RefreshCw className="w-4 h-4 mr-2" />
+                                Refresh List
+                              </Button>
                             )}
-                            Sync Policy
-                          </Button>
+                          </>
                         ) : (
                           <Badge variant="outline">
                             <AlertCircle className="w-3 h-3 mr-1" />
@@ -608,6 +660,42 @@ function PolicyCard({
                 </>
               )}
             </div>
+            {(project.commit_id || project.default_branch) && (
+              <div className="flex items-center space-x-4 mt-1">
+                {project.default_branch && (
+                  <>
+                    <span className="flex items-center space-x-1">
+                      <GitBranch className="w-3 h-3" />
+                      <span>{project.default_branch}</span>
+                    </span>
+                  </>
+                )}
+                {project.commit_id && (
+                  <>
+                    {project.default_branch && <span>•</span>}
+                    <span className="flex items-center space-x-1">
+                      <Code className="w-3 h-3" />
+                      <span>{project.commit_id.substring(0, 7)}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-4 w-4 p-0 hover:bg-muted"
+                        onClick={async () => {
+                          const success = await copyToClipboard(project.commit_id);
+                          if (success) {
+                            toast.success('Commit ID copied to clipboard');
+                          } else {
+                            toast.error('Failed to copy commit ID');
+                          }
+                        }}
+                      >
+                        <Copy className="w-3 h-3" />
+                      </Button>
+                    </span>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
         
